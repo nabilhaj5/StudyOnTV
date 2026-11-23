@@ -4,7 +4,7 @@
 
 ### 先学再看 · 让每一点进步被看见
 
-**Learn first. Watch later.** · 支持Android 平板、手机和电视，不需要自建服务器
+**Learn first. Watch later.** · 支持Android 平板.、手机和电视，不需要自建服务器
 
 [![Stars](https://img.shields.io/github/stars/chadyi/StudyOnTV?style=for-the-badge&logo=github&label=Stars)](https://github.com/chadyi/StudyOnTV/stargazers)
 [![Release](https://img.shields.io/github/v/release/chadyi/StudyOnTV?style=for-the-badge&label=Release)](https://github.com/chadyi/StudyOnTV/releases/latest)
