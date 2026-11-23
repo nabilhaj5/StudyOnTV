@@ -1,9 +1,9 @@
 {
-  "name": "英语基础（单词 + 语法）",
+  "name": "Inglés Básico (Vocabulario + Gramática)",
   "version": 1,
   "items": [
     {
-      "q": "“苹果”用英语怎么说？",
+      "q": "¿Cómo se dice 'manzana' en inglés?",
       "a": [
         "apple",
         "banana",
@@ -11,10 +11,10 @@
         "pear"
       ],
       "k": 0,
-      "tip": "apple 苹果。"
+      "tip": "apple significa manzana."
     },
     {
-      "q": "“谢谢”用英语怎么说？",
+      "q": "¿Cómo se dice 'gracias' en inglés?",
       "a": [
         "Sorry",
         "Thank you",
@@ -22,10 +22,10 @@
         "Goodbye"
       ],
       "k": 1,
-      "tip": "Thank you，谢谢。"
+      "tip": "Thank you significa gracias."
     },
     {
-      "q": "“图书馆”用英语怎么说？",
+      "q": "¿Cómo se dice 'biblioteca' en inglés?",
       "a": [
         "lab",
         "library",
@@ -33,10 +33,10 @@
         "school"
       ],
       "k": 1,
-      "tip": "library 图书馆。"
+      "tip": "library significa biblioteca."
     },
     {
-      "q": "“星期一”用英语怎么说？",
+      "q": "¿Cómo se dice 'lunes' en inglés?",
       "a": [
         "Sunday",
         "Monday",
@@ -44,10 +44,10 @@
         "Friday"
       ],
       "k": 1,
-      "tip": "Monday 星期一。"
+      "tip": "Monday significa lunes."
     },
     {
-      "q": "“我喜欢读书”正确的说法是？",
+      "q": "¿Cuál es la forma correcta de decir 'Me gusta leer libros'?",
       "a": [
         "I like read books.",
         "I likes reading books.",
@@ -55,10 +55,10 @@
         "I liking read books."
       ],
       "k": 2,
-      "tip": "like doing sth：I like reading books."
+      "tip": "Se usa 'like + verbo en -ing': I like reading books."
     },
     {
-      "q": "“She ___ to school by bus.” 应该填？",
+      "q": "Completa: 'She ___ to school by bus.'",
       "a": [
         "go",
         "goes",
@@ -66,10 +66,10 @@
         "gone"
       ],
       "k": 1,
-      "tip": "第三人称单数动词加 es。"
+      "tip": "En tercera persona del singular (she), el verbo añade 'es'."
     },
     {
-      "q": "“cat”的复数形式是？",
+      "q": "¿Cuál es el plural de 'cat'?",
       "a": [
         "cat",
         "cates",
@@ -77,10 +77,10 @@
         "caties"
       ],
       "k": 2,
-      "tip": "一般名词加 s。"
+      "tip": "A la mayoría de los sustantivos se les añade una 's'."
     },
     {
-      "q": "“big”的反义词是？",
+      "q": "¿Cuál es el antónimo de 'big'?",
       "a": [
         "small",
         "tall",
@@ -88,21 +88,21 @@
         "fat"
       ],
       "k": 0,
-      "tip": "big 大 ↔ small 小。"
+      "tip": "big (grande) es lo contrario de small (pequeño)."
     },
     {
-      "q": "“How old are you?” 是什么意思？",
+      "q": "¿Qué significa 'How old are you?'",
       "a": [
-        "你多大了？",
-        "你在哪里？",
-        "你叫什么？",
-        "你好吗？"
+        "¿Cuántos años tienes?",
+        "¿Dónde estás?",
+        "¿Cómo te llamas?",
+        "¿Cómo estás?"
       ],
       "k": 0,
-      "tip": "How old are you? 你几岁了？"
+      "tip": "How old are you? significa ¿Cuántos años tienes?"
     },
     {
-      "q": "“早餐”用英语怎么说？",
+      "q": "¿Cómo se dice 'desayuno' en inglés?",
       "a": [
         "lunch",
         "dinner",
@@ -110,7 +110,7 @@
         "supper"
       ],
       "k": 2,
-      "tip": "breakfast 早餐。"
+      "tip": "breakfast significa desayuno."
     }
   ]
 }
