@@ -1,116 +1,116 @@
 {
-  "name": "唐诗300首（节选）",
+  "name": "Refranes y Poesía Infantil Española",
   "version": 1,
   "items": [
     {
-      "q": "床前明月光，疑是地上霜。下一句是？",
+      "q": "Completa el refrán: 'A quien madruga, ___'.",
       "a": [
-        "举头望明月",
-        "低头思故乡",
-        "疑是银河落九天",
-        "夜来风雨声"
+        "Dios le ayuda",
+        "el sol le castiga",
+        "se le hace de noche",
+        "le duele la cabeza"
       ],
       "k": 0,
-      "tip": "《静夜思》李白：床前明月光，疑是地上霜。举头望明月，低头思故乡。"
+      "tip": "El refrán completo es: 'A quien madruga, Dios le ayuda'."
     },
     {
-      "q": "「春眠不觉晓」的下一句是？",
+      "q": "Completa el refrán: 'Más vale pájaro en mano...'",
       "a": [
-        "处处闻啼鸟",
-        "夜来风雨声",
-        "花落知多少",
-        "白日依山尽"
+        "que ciento volando",
+        "que dos en el nido",
+        "que una paloma",
+        "que nada volando"
       ],
       "k": 0,
-      "tip": "《春晓》孟浩然。"
+      "tip": "Significa que es mejor tener algo seguro que arriesgarse por algo incierto."
     },
     {
-      "q": "「白日依山尽」的下一句是？",
+      "q": "Completa el refrán: 'No por mucho madrugar...'",
       "a": [
-        "黄河入海流",
-        "欲穷千里目",
-        "更上一层楼",
-        "一片孤城万仞山"
+        "amanece más temprano",
+        "el sol sale antes",
+        "te acuestas más tarde",
+        "el gallo canta"
       ],
       "k": 0,
-      "tip": "《登鹳雀楼》王之涣。"
+      "tip": "Significa que hay que tener paciencia, las cosas llevan su tiempo."
     },
     {
-      "q": "「欲穷千里目」的下一句是？",
+      "q": "Completa la canción infantil: 'Cucú, cantaba la rana, cucú, ___'",
       "a": [
-        "更上一层楼",
-        "黄河入海流",
-        "白日依山尽",
-        "春风吹又生"
+        "debajo del agua",
+        "debajo de la cama",
+        "en el estanque",
+        "en la montaña"
       ],
       "k": 0,
-      "tip": "《登鹳雀楼》王之涣。"
+      "tip": "Es una canción tradicional infantil española."
     },
     {
-      "q": "「离离原上草」的下一句是？",
+      "q": "Completa el refrán: 'Perro ladrador, ___'.",
       "a": [
-        "一岁一枯荣",
-        "野火烧不尽",
-        "春风吹又生",
-        "远芳侵古道"
+        "poco mordedor",
+        "muy mordedor",
+        "que no muerde",
+        "que siempre muerde"
       ],
       "k": 0,
-      "tip": "《草》白居易。"
+      "tip": "Significa que quien mucho amenaza, poco hace."
     },
     {
-      "q": "「野火烧不尽」的下一句是？",
+      "q": "Completa el refrán: 'En abril, ___'.",
       "a": [
-        "春风吹又生",
-        "一岁一枯荣",
-        "远芳侵古道",
-        "晴翠接荒城"
+        "aguas mil",
+        "flores mil",
+        "días mil",
+        "nubes mil"
       ],
       "k": 0,
-      "tip": "《草》白居易。"
+      "tip": "Es un refrán sobre la lluvia típica de la primavera."
     },
     {
-      "q": "「谁知盘中餐」的下一句是？",
+      "q": "Completa el refrán: 'El que la sigue, ___'.",
       "a": [
-        "粒粒皆辛苦",
-        "锄禾日当午",
-        "汗滴禾下土",
-        "春种一粒粟"
+        "la consigue",
+        "se cansa",
+        "la pierde",
+        "se rinde"
       ],
       "k": 0,
-      "tip": "《悯农》李绅。"
+      "tip": "Significa que la perseverancia logra los objetivos."
     },
     {
-      "q": "「两个黄鹂鸣翠柳」的下一句是？",
+      "q": "Completa el refrán: 'A caballo regalado ___'.",
       "a": [
-        "一行白鹭上青天",
-        "窗含西岭千秋雪",
-        "门泊东吴万里船",
-        "孤帆远影碧空尽"
+        "no le mires el diente",
+        "no le mires el pelo",
+        "no le des de comer",
+        "no lo montes"
       ],
       "k": 0,
-      "tip": "《绝句》杜甫。"
+      "tip": "Significa que no se debe criticar un regalo."
     },
     {
-      "q": "《静夜思》的作者是谁？",
+      "q": "¿Quién escribió la poesía 'La canción del pirata'?",
       "a": [
-        "李白",
-        "杜甫",
-        "白居易",
-        "王维"
+        "José de Espronceda",
+        "Gustavo Adolfo Bécquer",
+        "Federico García Lorca",
+        "Antonio Machado"
       ],
       "k": 0,
-      "tip": "李白，字太白，号青莲居士。"
+      "tip": "Es un famoso poema del Romanticismo español."
     },
     {
-      "q": "《春晓》的作者是谁？",
+      "q": "¿Quién escribió la poesía 'Volverán las oscuras golondrinas'?",
       "a": [
-        "孟浩然",
-        "李白",
-        "杜牧",
-        "李商隐"
+        "Gustavo Adolfo Bécquer",
+        "Rosalía de Castro",
+        "Lope de Vega",
+        "Miguel de Unamuno"
       ],
       "k": 0,
-      "tip": "孟浩然，唐代山水田园诗人。"
+      "tip": "Es una de las Rimas más conocidas de Bécquer."
     }
   ]
 }
