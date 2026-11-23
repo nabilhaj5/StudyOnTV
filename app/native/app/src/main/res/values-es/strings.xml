@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="navigation_unavailable">No disponible por ahora</string>
+    <string name="app_name">StudyOnTV</string> <!-- O puedes poner "Aprende en TV" -->
+    <string name="accessibility_label">StudyOnTV Protección de tiempo de pantalla</string>
+    <string name="notification_listener_label">StudyOnTV · Restauración en segundo plano (no lee notificaciones)</string>
+    <string name="accessibility_desc">Se utiliza para gestionar el tiempo de uso de la TV, el móvil y la tablet. Muestra tareas de estudio cuando se acaba el tiempo y filtra el botón de inicio y el de multitarea del mando a distancia en las páginas de estudio restringido. Lee los cambios de aplicación y las pulsaciones de teclas, pero no lee el contenido de la pantalla.</string>
+</resources>
