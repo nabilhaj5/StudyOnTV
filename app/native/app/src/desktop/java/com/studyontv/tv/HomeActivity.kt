@@ -139,7 +139,7 @@ class HomeActivity : Activity() {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
         }
         val parent = TextView(this).apply {
-            text = "家长"
+            text = "Padres"
             setTextColor(Color.parseColor("#8FB6FF"))
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             setPadding(dp(16), dp(8), dp(8), dp(8))
@@ -180,16 +180,16 @@ class HomeActivity : Activity() {
         val minutes = ((seconds + 59) / 60).toInt()
         statusText?.text = when {
             status == null -> ""
-            free -> "今天不限时"
+            free -> "Hoy sin límite de tiempo"
             reason.isNotEmpty() -> when (reason) {
-                "rest" -> "休息中，休息完才能继续看"
-                "schedule" -> "现在不在可以看的时段"
-                "locked" -> "电视已被家长锁定"
-                "feedback" -> "等家长批改作业"
-                "rounds" -> "今天的组数用完了"
-                else -> "今天的时间用完了，答对题目可以继续看"
+                "rest" -> "En descanso, espera para seguir viendo"
+                "schedule" -> "Ahora no es un horario permitido"
+                "locked" -> "TV bloqueada por los padres"
+                "feedback" -> "Esperando revisión de los padres"
+                "rounds" -> "Se han agotado las rondas de hoy"
+                else -> "Tiempo agotado, responde bien para seguir viendo"
             }
-            else -> "今天还可以看 $minutes 分钟"
+            else -> "Hoy puedes ver $minutes minutos más"
         }
     }
 
@@ -231,7 +231,7 @@ class HomeActivity : Activity() {
         val pm = packageManager
         val out = ArrayList<Item>()
         val own = applicationInfo.loadIcon(pm)
-        out.add(Item(KIND_LEARN, null, "学习", own))
+        out.add(Item(KIND_LEARN, null, "Estudiar", own))
         val seen = HashSet<String>()
         for (category in listOf(Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER)) {
             val intent = Intent(Intent.ACTION_MAIN).addCategory(category)
@@ -296,12 +296,12 @@ class HomeActivity : Activity() {
         val pm = packageManager
         val intent = pm.getLeanbackLaunchIntentForPackage(pkg) ?: pm.getLaunchIntentForPackage(pkg)
         if (intent == null) {
-            Toast.makeText(this, "打不开 ${item.label}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No se puede abrir ${item.label}", Toast.LENGTH_SHORT).show()
             return
         }
         try { startActivity(intent) } catch (e: Exception) {
             Diag.warn("Desktop", "launch $pkg failed: ${e.javaClass.simpleName}")
-            Toast.makeText(this, "打不开 ${item.label}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No se puede abrir ${item.label}", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -313,7 +313,7 @@ class HomeActivity : Activity() {
         Diag.error("Desktop", "home activity failed ($failures)", error)
         if (failures >= MAX_FAILURES) {
             DesktopMode.failToSystemHome(this, error.javaClass.simpleName)
-            Toast.makeText(this, "电视桌面启动失败，已切回系统桌面", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Fallo al iniciar el escritorio, volviendo al escritorio del sistema", Toast.LENGTH_LONG).show()
         } else {
             DesktopMode.openChooser(this)
         }
