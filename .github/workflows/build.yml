@@ -19,14 +19,17 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Build Debug APK
         run: |
           cd app/native
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          ./gradlew assembleDebug
+          gradle assembleDebug
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: StudyOnTV-APK
           path: 'app/native/**/build/outputs/apk/debug/*.apk'
-       
