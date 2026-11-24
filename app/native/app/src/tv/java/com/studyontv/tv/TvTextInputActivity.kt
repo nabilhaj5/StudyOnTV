@@ -44,7 +44,7 @@ class TvTextInputActivity : Activity() {
             setPadding((64 * dp).toInt(), (36 * dp).toInt(), (64 * dp).toInt(), (24 * dp).toInt())
         }
         root.addView(TextView(this).apply {
-            text = if (passwordMode) "家长验证" else "填写答案"
+            text = if (passwordMode) "Verificación de padres" else "Escribe la respuesta"
             textSize = 26f; setTextColor(TvUi.foreground(this@TvTextInputActivity))
         })
         val prompt = intent.getStringExtra("prompt").orEmpty()
@@ -53,7 +53,7 @@ class TvTextInputActivity : Activity() {
             setPadding(0, (8 * dp).toInt(), 0, (12 * dp).toInt())
         }, LinearLayout.LayoutParams(-1, -2))
         edit = EditText(this).apply {
-            hint = if (passwordMode) "输入家长管理密码" else "用遥控器或语音输入，完成后选择“确定”"
+            hint = if (passwordMode) "Introduce la contraseña de padres" else "Usa el mando o la voz, y pulsa 'Aceptar' al terminar"
             inputType = if (passwordMode) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             imeOptions = EditorInfo.IME_ACTION_DONE or EditorInfo.IME_FLAG_NO_EXTRACT_UI
@@ -70,10 +70,10 @@ class TvTextInputActivity : Activity() {
             TvUi.button(this, label, primary, action).also { button ->
                 row.addView(button, LinearLayout.LayoutParams(-2, -2).apply { leftMargin = (8 * dp).toInt(); rightMargin = (8 * dp).toInt() })
             }
-        add("确定", true) { finishWith(true) }
-        if (!passwordMode) voiceButton = add("语音输入 / 重录") { voice() }
-        add("清空") { edit.setText("") }
-        add("取消") { finishWith(false) }
+        add("Aceptar", true) { finishWith(true) }
+        if (!passwordMode) voiceButton = add("Voz / Regrabar") { voice() }
+        add("Borrar") { edit.setText("") }
+        add("Cancelar") { finishWith(false) }
         root.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (20 * dp).toInt() })
         setContentView(root)
         edit.requestFocus()
@@ -101,21 +101,21 @@ class TvTextInputActivity : Activity() {
             requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 9); return
         }
         capture?.let { session ->
-            if (session.active) { session.stop(); voiceButton.text = "正在识别…"; return }
+            if (session.active) { session.stop(); voiceButton.text = "Reconociendo..."; return }
         }
         val session = VoiceCapture.Session(key,
-            onState = { state -> voiceButton.text = if (state == "recording") "停止并识别" else "正在识别…" },
+            onState = { state -> voiceButton.text = if (state == "recording") "Parar y reconocer" else "Reconociendo..." },
             onResult = { text ->
-                capture = null; voiceButton.text = "语音输入 / 重录"
+                capture = null; voiceButton.text = "Voz / Regrabar"
                 edit.setText(text); edit.setSelection(edit.text.length)
             },
             onError = { message ->
-                capture = null; voiceButton.text = "语音输入 / 重录"
+                capture = null; voiceButton.text = "Voz / Regrabar"
                 android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_LONG).show()
             })
         if (!session.start()) {
-            voiceButton.text = "语音输入 / 重录"
-            android.widget.Toast.makeText(this, "这台电视没有可用的麦克风，改用系统语音识别", android.widget.Toast.LENGTH_LONG).show()
+            voiceButton.text = "Voz / Regrabar"
+            android.widget.Toast.makeText(this, "Esta TV no tiene micrófono, usando el reconocimiento del sistema", android.widget.Toast.LENGTH_LONG).show()
             systemVoice(); return
         }
         capture = session
@@ -125,9 +125,9 @@ class TvTextInputActivity : Activity() {
         try {
             startActivityForResult(Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, intent.getStringExtra("language") ?: "zh-CN"), 7)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, intent.getStringExtra("language") ?: "es-ES"), 7)
         } catch (_: Exception) {
-            android.widget.Toast.makeText(this, "这台电视没有语音识别；家长可以在面板里填写 DeepSeek Key 用云端识别", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, "Esta TV no tiene reconocimiento de voz; los padres pueden poner una clave DeepSeek para usar la nube", android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -136,7 +136,7 @@ class TvTextInputActivity : Activity() {
         if (requestCode != 9) return
         if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) voice()
         else {
-            android.widget.Toast.makeText(this, "没有麦克风权限，改用系统语音识别", android.widget.Toast.LENGTH_LONG).show()
+            android.widget.Toast.makeText(this, "Sin permiso de micrófono, usando el reconocimiento del sistema", android.widget.Toast.LENGTH_LONG).show()
             systemVoice()
         }
     }
