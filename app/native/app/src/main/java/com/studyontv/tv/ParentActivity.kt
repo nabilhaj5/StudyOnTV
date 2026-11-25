@@ -48,10 +48,10 @@ class ParentActivity : Activity() {
         fun text(value: String, size: Float, color: Int = TvUi.foreground(this)) = TextView(this).apply {
             text = value; textSize = size; setTextColor(color); setPadding(0, dp(8), 0, dp(8))
         }
-        column.addView(text(if (changing) "修改管理密码" else if (setup) "设置管理密码" else "家长验证", if (tv) 32f else 28f).apply { paint.isFakeBoldText = true })
-        column.addView(text(if (setup) "请设置 6–64 位密码。再次连接、打开管理面板和 API 都需要验证。" else "请输入管理密码", 15f, TvUi.muted(this)))
+        column.addView(text(if (changing) "Cambiar contraseña de padres" else if (setup) "Configurar contraseña de padres" else "Verificación de padres", if (tv) 32f else 28f).apply { paint.isFakeBoldText = true })
+        column.addView(text(if (setup) "Establece una contraseña de 6 a 64 caracteres. Será necesaria para reconectar, abrir el panel y usar la API." else "Introduce la contraseña de padres", 15f, TvUi.muted(this)))
         val secret = EditText(this).apply {
-            hint = if (changing) "新密码" else "管理密码"
+            hint = if (changing) "Nueva contraseña" else "Contraseña de padres"
             // 注意顺序：isSingleLine 内部会重设 inputType，必须放在最前面，
             // 否则密码类型和遮罩都会被清掉，密码就明文显示了（issue #65）
             isSingleLine = true
@@ -62,7 +62,7 @@ class ParentActivity : Activity() {
         }
         column.addView(secret, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         val confirm = EditText(this).apply {
-            hint = "再次输入密码"
+            hint = "Repite la contraseña"
             isSingleLine = true
             inputType = secret.inputType
             transformationMethod = android.text.method.PasswordTransformationMethod.getInstance()
@@ -78,7 +78,7 @@ class ParentActivity : Activity() {
             val value = secret.text.toString()
             if (setup) {
                 if (value.length !in 6..64 || value != confirm.text.toString()) {
-                    error.text = "密码需要 6–64 位，两次输入须一致"; return
+                    error.text = "La contraseña debe tener entre 6 y 64 caracteres y coincidir en ambos campos"; return
                 }
                 AdminAuth.setPassword(this, value)
                 initialSetup = false
@@ -90,27 +90,27 @@ class ParentActivity : Activity() {
                 connection()
             } else {
                 submit.isEnabled = false
-                submit.text = "正在验证…"
+                submit.text = "Verificando..."
                 error.text = ""
                 Thread {
                     val ok = AdminAuth.verify(this, value)
                     runOnUiThread {
                         if (isFinishing) return@runOnUiThread
                         submit.isEnabled = true
-                        submit.text = "验证并打开连接页"
+                        submit.text = "Verificar y abrir conexión"
                         if (ok) { AdminAuth.markVerified(); verified = true; connection() }
-                        else { error.text = "密码错误，连续错误 5 次后需等待一分钟"; secret.setText(""); secret.requestFocus() }
+                        else { error.text = "Contraseña incorrecta. Tras 5 fallos deberás esperar un minuto"; secret.setText(""); secret.requestFocus() }
                     }
                 }.start()
             }
         }
-        submit = TvUi.button(this, if (setup) "保存密码" else "验证并打开连接页", true) { go() }
+        submit = TvUi.button(this, if (setup) "Guardar contraseña" else "Verificar y abrir conexión", true) { go() }
         column.addView(submit, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(4) })
         (if (setup) confirm else secret).setOnEditorActionListener { _, _, _ -> go(); true }
-        if (!setup || changing) column.addView(TvUi.button(this, if (changing) "取消" else "返回答题") {
+        if (!setup || changing) column.addView(TvUi.button(this, if (changing) "Cancelar" else "Volver a las preguntas") {
             if (changing) connection() else { startActivity(Intent(this, MainActivity::class.java)); finish() }
         }, LinearLayout.LayoutParams(-1, dp(52)).apply { topMargin = dp(12) })
-        if (setup && !changing) column.addView(text(if (tv) "之后在学习页最上方连续短按遥控器 ↑ 5 次，可重新打开此入口。" else "之后在学习页连续点击左上角标题 5 次，可重新打开此入口。", 14f, TvUi.muted(this)))
+        if (setup && !changing) column.addView(text(if (tv) "Después, en la página de estudio, pulsa 5 veces seguidas la flecha ↑ del mando para volver a abrir este acceso." else "Después, en la página de estudio, toca 5 veces el título superior izquierdo para volver a abrir este acceso.", 14f, TvUi.muted(this)))
         setContentView(ScrollView(this).apply { isFillViewport = true; setBackgroundColor(TvUi.background(this@ParentActivity)); addView(content) })
         secret.requestFocus()
     }
