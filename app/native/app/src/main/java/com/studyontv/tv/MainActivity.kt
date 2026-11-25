@@ -54,14 +54,14 @@ open class MainActivity : Activity() {
         val summary = CrashDetector.readAndClear(this)
         crashDialog?.dismiss()
         crashDialog = AlertDialog.Builder(this)
-            .setTitle("🚨 上次运行时发生了崩溃")
+            .setTitle("🚨 La app se cerró inesperadamente la última vez")
             .setMessage(
-                "是否允许上传崩溃日志帮助修复问题？\n\n" +
-                "包含：崩溃调用堆栈、设备型号、Android 版本、应用版本号\n" +
-                "不含：题库内容、管理密码、答题记录、局域网 IP\n\n" +
-                "日志将上传至开发者自建服务器，可随时在「设置 → 崩溃报告」关闭。"
+                "¿Permites subir el registro de errores para ayudar a solucionarlo?\n\n" +
+                "Incluye: seguimiento de la pila, modelo del dispositivo, versión de Android y de la app\n" +
+                "No incluye: contenido del banco de preguntas, contraseña de padres, historial de respuestas ni IP local\n\n" +
+                "El registro se enviará al servidor del desarrollador. Puedes desactivarlo en «Ajustes → Informes de errores»."
             )
-            .setPositiveButton("同意并上传") { _, _ ->
+            .setPositiveButton("Permitir y subir") { _, _ ->
                 Prefs.setCrashUploadConsent(this, true)
                 Prefs.setCrashUploadConsentAsked(this, true)
                 val endpoint = Prefs.crashEndpoint(this)
@@ -70,12 +70,12 @@ open class MainActivity : Activity() {
                 CrashDetector.writePending(this, summary)
                 if (endpoint.isNotBlank()) {
                     Diag.uploadPendingCrash(this, endpoint, token)
-                    android.widget.Toast.makeText(this, "正在上传崩溃日志，感谢反馈！", android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(this, "Subiendo registro de errores. ¡Gracias por tu ayuda!", android.widget.Toast.LENGTH_SHORT).show()
                 } else {
-                    android.widget.Toast.makeText(this, "已记录同意，请在设置页填写上传地址后生效。", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(this, "Consentimiento guardado. Se aplicará cuando configures una dirección de subida en Ajustes.", android.widget.Toast.LENGTH_LONG).show()
                 }
             }
-            .setNegativeButton("不了") { _, _ ->
+            .setNegativeButton("No, gracias") { _, _ ->
                 Prefs.setCrashUploadConsentAsked(this, true)
             }
             .setCancelable(false)
