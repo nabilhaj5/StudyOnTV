@@ -44,10 +44,10 @@ class OnboardingActivity : Activity() {
 
         // 左侧：标题、当前状态、操作
         val intro = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        intro.addView(TvUi.text(this, "使用时间管理", if (tv) 15f else 13f, p.text2, true))
-        intro.addView(TvUi.text(this, "开启几项权限，\n到时间自动提醒学习", if (tv) 34f else 26f, p.text, true).apply { setLineSpacing(0f, 1.15f) },
+        intro.addView(TvUi.text(this, "Control del tiempo de uso", if (tv) 15f else 13f, p.text2, true))
+        intro.addView(TvUi.text(this, "Activa unos permisos\npara que la app te avise cuando toque estudiar", if (tv) 34f else 26f, p.text, true).apply { setLineSpacing(0f, 1.15f) },
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
-        intro.addView(TvUi.text(this, "都可以稍后在家长设置里调整。只需要悬浮窗就能开始使用，其余权限让计时更准确。", if (tv) 16f else 14f, p.text2).apply { setLineSpacing(0f, 1.3f) },
+        intro.addView(TvUi.text(this, "Puedes cambiarlos luego en los ajustes de padres. Solo con el permiso de superposición ya puedes empezar; el resto hace que el cronómetro sea más preciso.", if (tv) 16f else 14f, p.text2).apply { setLineSpacing(0f, 1.3f) },
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
         val status = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
@@ -63,9 +63,9 @@ class OnboardingActivity : Activity() {
         status.addView(statusCopy, LinearLayout.LayoutParams(0, -2, 1f))
         intro.addView(status, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24) })
         val actions = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val manage = TvUi.button(this, "完成，进入家长设置", true) { complete(true) }.apply { minHeight = dp(52); minimumHeight = dp(52) }
-        val learn = TvUi.button(this, "先开始学习") { complete(false) }.apply { minHeight = dp(52); minimumHeight = dp(52) }
-        val studyOnly = TvUi.button(this, "仅用作刷题背诵（免权限，直接进入）") { completeStudyOnly() }.apply { minHeight = dp(52); minimumHeight = dp(52) }
+        val manage = TvUi.button(this, "Terminar e ir a ajustes de padres", true) { complete(true) }.apply { minHeight = dp(52); minimumHeight = dp(52) }
+        val learn = TvUi.button(this, "Empezar a estudiar") { complete(false) }.apply { minHeight = dp(52); minimumHeight = dp(52) }
+        val studyOnly = TvUi.button(this, "Solo para practicar y memorizar (sin permisos, entrar directo)") { completeStudyOnly() }.apply { minHeight = dp(52); minimumHeight = dp(52) }
         actions.addView(manage, LinearLayout.LayoutParams(-1, -2))
         actions.addView(learn, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(if (tv) 12 else 10) })
         actions.addView(studyOnly, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(if (tv) 12 else 10) })
@@ -77,39 +77,39 @@ class OnboardingActivity : Activity() {
             items.add(Item(row, enabled, optional))
             list.addView(row.view, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(if (tv) 8 else 10) })
         }
-        list.addView(TvUi.text(this, "权限", if (tv) 14f else 13f, p.text3, true), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10); leftMargin = dp(4) })
-        add(android.R.drawable.ic_menu_view, "悬浮窗", "到时间后在其他应用上方显示学习页", false, { GateOverlay.canDraw(this) }) {
+        list.addView(TvUi.text(this, "Permisos", if (tv) 14f else 13f, p.text3, true), LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10); leftMargin = dp(4) })
+        add(android.R.drawable.ic_menu_view, "Superposición", "Muestra la página de estudio sobre otras apps cuando llega la hora", false, { GateOverlay.canDraw(this) }) {
             openSettings(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, true)
         }
-        add(android.R.drawable.ic_menu_manage, "无障碍服务", if (tv) "及时识别应用切换，部分电视不支持" else "及时识别应用切换", true, { WatchAccessibilityService.connected }) {
+        add(android.R.drawable.ic_menu_manage, "Servicio de accesibilidad", if (tv) "Detecta el cambio de app al instante, algunas TVs no lo soportan" else "Detecta el cambio de app al instante", true, { WatchAccessibilityService.connected }) {
             openSettings(Settings.ACTION_ACCESSIBILITY_SETTINGS)
         }
-        add(android.R.drawable.ic_menu_agenda, "通知使用权", "被系统清理后由通知服务拉起；不读取通知内容", true, { RevivalListener.enabled(this) }) {
+        add(android.R.drawable.ic_menu_agenda, "Acceso a notificaciones", "El servicio de notificaciones reinicia la app si el sistema la cierra; no lee el contenido de las notificaciones", true, { RevivalListener.enabled(this) }) {
             openNotificationAccess()
         }
-        add(android.R.drawable.ic_menu_recent_history, "使用情况访问", "只统计其他应用的使用时长", true, { Foreground.hasUsageAccess(this) }) {
+        add(android.R.drawable.ic_menu_recent_history, "Acceso de uso", "Solo mide el tiempo de uso de otras aplicaciones", true, { Foreground.hasUsageAccess(this) }) {
             openSettings(Settings.ACTION_USAGE_ACCESS_SETTINGS)
         }
-        add(android.R.drawable.ic_lock_idle_alarm, "后台运行", "关闭电池优化，减少被系统清理", true, { KeepAlive.ignoringBattery(this) }) {
+        add(android.R.drawable.ic_lock_idle_alarm, "Ejecución en segundo plano", "Desactiva la optimización de batería para que el sistema no cierre la app", true, { KeepAlive.ignoringBattery(this) }) {
             if (Build.VERSION.SDK_INT >= 23 && !KeepAlive.ignoringBattery(this)) openSettings(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, true, Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
             else openSettings(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, true)
         }
-        add(android.R.drawable.ic_lock_lock, "防卸载", "孩子无法直接删除应用，家长可随时关闭", true, { UninstallGuard.active(this) }) {
+        add(android.R.drawable.ic_lock_lock, "Protección contra desinstalación", "El niño no puede borrar la app; los padres pueden desactivarlo cuando quieran", true, { UninstallGuard.active(this) }) {
             if (UninstallGuard.active(this)) openSettings(Settings.ACTION_SECURITY_SETTINGS)
             else try { GateService.openingSystemPage(parentAuthorized = true); startActivity(UninstallGuard.requestIntent(this)) } catch (_: Exception) {
-                Toast.makeText(this, "这台设备不支持设备管理应用，无法开启防卸载", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Este dispositivo no admite administración de dispositivos, no se puede activar la protección", Toast.LENGTH_LONG).show()
             }
         }
         // 电视一般不显示通知，只在手机 / 平板上提示
-        if (!tv && Build.VERSION.SDK_INT >= 33) add(android.R.drawable.ic_dialog_info, "通知", "显示“使用时间管理中”的常驻通知", true,
+        if (!tv && Build.VERSION.SDK_INT >= 33) add(android.R.drawable.ic_dialog_info, "Notificaciones", "Muestra la notificación permanente de «Control del tiempo de uso»", true,
             { checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED }) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 9)
         }
         // #130：不少电视 / 投影 / 平板把原生设置菜单藏起来，家长找不到授权入口。
         // 这一行不显示「已开启 / 未开启」，只是把完整系统设置直接调起来。
-        val systemSettings = TvUi.row(this, android.R.drawable.ic_menu_preferences, "打开系统设置", "找不到应用管理、授权入口时从完整设置里找", ::openSystemSettings)
+        val systemSettings = TvUi.row(this, android.R.drawable.ic_menu_preferences, "Abrir ajustes del sistema", "Si no encuentras gestión de apps o permisos, búscalo en los ajustes completos", ::openSystemSettings)
         list.addView(systemSettings.view, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(if (tv) 8 else 10) })
-        list.addView(TvUi.text(this, if (tv) "部分电视没有“电池优化”，可在系统“应用管理”里允许自启动。" else "部分手机还需要在系统设置里允许“自启动”或“后台活动”。", if (tv) 13f else 12f, p.text3),
+        list.addView(TvUi.text(this, if (tv) "Algunas TVs no tienen «optimización de batería»; puedes permitir el inicio automático en «Gestión de apps» del sistema." else "Algunos móviles necesitan permitir el «inicio automático» o la «actividad en segundo plano» en los ajustes del sistema.", if (tv) 13f else 12f, p.text3),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(6); leftMargin = dp(4) })
         // 针对常见品牌给出更具体的自启动引导；文案与家长面板共用
         val brandTip = KeepAlive.brandTip(tv)
@@ -153,19 +153,19 @@ class OnboardingActivity : Activity() {
         options.add(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
         options.add(Intent(Settings.ACTION_SETTINGS))
         for (intent in options) try { startActivity(intent); return } catch (_: Exception) { }
-        Toast.makeText(this, "请在系统设置中调整权限", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Ajusta los permisos en los ajustes del sistema", Toast.LENGTH_SHORT).show()
     }
 
     /** #130：直接调起完整系统设置，电视隐藏菜单时家长仍能找到权限页面 */
     private fun openSystemSettings() {
-        if (!DeviceBridge.openSystemSettings(this)) Toast.makeText(this, "这台设备没有可调起的系统设置页面，可用电脑通过 ADB 授权", Toast.LENGTH_LONG).show()
+        if (!DeviceBridge.openSystemSettings(this)) Toast.makeText(this, "Este dispositivo no tiene una página de ajustes del sistema a la que ir; puedes autorizar por ADB desde un ordenador", Toast.LENGTH_LONG).show()
     }
 
     /** 通知使用权：电视上常被裁剪掉入口，没有页面时直接给可复制的 ADB 命令。 */
     private fun openNotificationAccess() {
         GateService.openingSystemPage(parentAuthorized = true)
         try { startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)); return } catch (_: Exception) { }
-        Toast.makeText(this, "这台设备没有“通知使用权”设置页。可用 ADB 开启：\n${RevivalListener.adbCommand(this)}", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Este dispositivo no tiene la página «Acceso a notificaciones». Puedes activarlo por ADB:\n${RevivalListener.adbCommand(this)}", Toast.LENGTH_LONG).show()
     }
 
     private fun maybeRequestNotifications() {
@@ -182,7 +182,7 @@ class OnboardingActivity : Activity() {
         DeviceRuntime.learning.status()
         Prefs.setOnboarded(this, true)
         try { GateService.start(this) } catch (_: RuntimeException) {
-            Toast.makeText(this, "后台管理暂未启动，您仍可继续学习", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "La gestión en segundo plano no se ha iniciado; puedes seguir estudiando", Toast.LENGTH_SHORT).show()
         }
         GateService.refreshNow()
         startActivity(Intent(this, if (manage) ParentActivity::class.java else MainActivity::class.java))
@@ -203,16 +203,16 @@ class OnboardingActivity : Activity() {
     private fun refresh() {
         if (!::modeTitle.isInitialized) return
         val p = TvUi.palette(this)
-        items.forEach { val on = it.enabled(); it.row.setStatus(if (on) "已开启" else if (it.optional) "未开启" else "去开启", on) }
+        items.forEach { val on = it.enabled(); it.row.setStatus(if (on) "Activado" else if (it.optional) "Desactivado" else "Activar", on) }
         val overlay = GateOverlay.canDraw(this)
         val usage = Foreground.hasUsageAccess(this)
         val supervisionEnabled = try { DeviceRuntime.store.config().optBoolean("supervisionEnabled", true) } catch (_: Throwable) { true }
         val (title, description, ready) = when {
-            !supervisionEnabled -> Triple("当前为纯学习模式", "点「完成」或「先开始学习」可恢复时间管理", false)
-            overlay && (WatchAccessibilityService.connected || usage) -> Triple("已就绪", "到时间会自动显示学习页，计时准确", true)
-            overlay -> Triple("基本可用", "离开学习页后按亮屏时间计时", true)
-            usage -> Triple("可以记录使用时间", "开启悬浮窗后，才能在到时间时显示学习页", false)
-            else -> Triple("尚未开启", "建议至少开启悬浮窗", false)
+            !supervisionEnabled -> Triple("Modo solo estudio", "Pulsa «Terminar» o «Empezar a estudiar» para recuperar el control del tiempo", false)
+            overlay && (WatchAccessibilityService.connected || usage) -> Triple("Listo", "La página de estudio aparecerá automáticamente y el tiempo será exacto", true)
+            overlay -> Triple("Funcionalidad básica", "El tiempo se cuenta desde que se enciende la pantalla hasta que sales de la página de estudio", true)
+            usage -> Triple("Se puede registrar el tiempo de uso", "Activa la superposición para que aparezca la página de estudio cuando llegue la hora", false)
+            else -> Triple("Sin activar", "Se recomienda activar al menos la superposición", false)
         }
         modeTitle.text = title; modeDescription.text = description
         modeDot.background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(if (ready) p.ok else p.warn) }
