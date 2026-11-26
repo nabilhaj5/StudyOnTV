@@ -62,10 +62,10 @@ object SpacedRepetition {
         val goodDays = next(current, 4, 0L).intervalDays.coerceAtLeast(1L)
         val easyDays = maxOf(goodDays + 1L, next(current, 5, 0L).intervalDays)
         return JSONObject()
-            .put("again", "10分钟")
-            .put("hard", "${hardDays}天")
-            .put("good", "${goodDays}天")
-            .put("easy", "${easyDays}天")
+            .put("again", "10 minutos")
+            .put("hard", "${hardDays} días")
+            .put("good", "${goodDays} días")
+            .put("easy", "${easyDays} días")
     }
 }
 
@@ -77,8 +77,8 @@ class LocalStore(
     internal fun clockReading(): DeviceClock.Reading = readClock()
 
     companion object {
-        val DEFAULT_PRAISE = listOf("太棒了！", "答对啦！", "完全正确！", "真厉害！", "好样的，继续保持！", "漂亮！你越来越熟练了")
-        val DEFAULT_ENCOURAGE = listOf("没关系，记住正确答案就好", "差一点点，下一题加油！", "错误也是学习的一部分", "别灰心，再接再厉！")
+        val DEFAULT_PRAISE = listOf("¡Genial!", "¡Correcto!", "¡Totalmente correcto!", "¡Qué crack!", "¡Bien hecho, sigue así!", "¡Estupendo! Cada vez lo dominas mejor")
+        val DEFAULT_ENCOURAGE = listOf("No pasa nada, quédate con la respuesta correcta", "¡Casi! A por la siguiente", "Equivocarse también forma parte de aprender", "¡No te desanimes, sigue intentándolo!")
         /** 第一个孩子沿用旧版本的存储键（不带前缀），升级时不需要搬运任何数据 */
         const val DEFAULT_CHILD = ""
         /** 设备级共享的设置：不随当前孩子切换 */
@@ -430,7 +430,7 @@ class LocalStore(
 
     /** 题库里的题目 id：删除题库前先拿到，用来判断孩子手上那一轮是不是被删掉了。 */
     fun idsInBank(bank: String): List<String> {
-        require(bank.isNotBlank()) { "请选择题库" }
+        require(bank.isNotBlank()) { "Elige un banco de preguntas" }
         val ids = mutableListOf<String>()
         readableDatabase.rawQuery("SELECT id FROM questions WHERE bank=?", arrayOf(bank)).use { cursor ->
             while (cursor.moveToNext()) ids.add(cursor.getString(0))
@@ -612,15 +612,15 @@ class LocalStore(
     private fun ensureDefaultChild() {
         val exists = readableDatabase.rawQuery("SELECT 1 FROM children WHERE id=? LIMIT 1", arrayOf(DEFAULT_CHILD)).use { it.moveToFirst() }
         if (!exists) writableDatabase.insertWithOnConflict("children", null, ContentValues().apply {
-            put("id", DEFAULT_CHILD); put("name", "孩子1"); put("created_at", System.currentTimeMillis())
+            put("id", DEFAULT_CHILD); put("name", "Niño 1"); put("created_at", System.currentTimeMillis())
         }, SQLiteDatabase.CONFLICT_IGNORE)
     }
 
     private fun validName(raw: String, except: String? = null): String {
         val name = raw.trim()
-        require(name.length in 1..12) { "孩子名字需要 1–12 个字" }
+        require(name.length in 1..12) { "El nombre del niño debe tener entre 1 y 12 caracteres" }
         val taken = readableDatabase.rawQuery("SELECT id FROM children WHERE name=?", arrayOf(name)).use { c -> if (c.moveToFirst()) c.getString(0) else null }
-        require(taken == null || taken == except) { "已经有同名的孩子" }
+        require(taken == null || taken == except) { "Ya hay un niño con ese nombre" }
         return name
     }
 
@@ -628,7 +628,7 @@ class LocalStore(
         ensureDefaultChild()
         val name = validName(raw)
         val count = readableDatabase.rawQuery("SELECT COUNT(*) FROM children", null).use { if (it.moveToFirst()) it.getInt(0) else 0 }
-        require(count < MAX_CHILDREN) { "最多只能添加 $MAX_CHILDREN 个孩子" }
+        require(count < MAX_CHILDREN) { "Solo puedes añadir hasta $MAX_CHILDREN niños" }
         val id = "c" + UUID.randomUUID().toString().replace("-", "").take(8)
         // 新孩子沿用当前的规则（时长、时段、奖励…），不需要家长再配一遍；学习进度从零开始
         val inherited = rawGet(scoped("config"))
@@ -642,13 +642,13 @@ class LocalStore(
     fun renameChild(id: String, raw: String): JSONObject {
         val name = validName(raw, id)
         val updated = writableDatabase.update("children", ContentValues().apply { put("name", name) }, "id=?", arrayOf(id))
-        require(updated > 0) { "孩子档案不存在" }
+        require(updated > 0) { "El perfil del niño no existe" }
         return JSONObject().put("id", id).put("name", name)
     }
 
     /** 删除孩子档案：连同他的学习记录、错题统计、复习进度、主观题批改和孤儿手写图一起清掉，题目本身保留 */
     fun deleteChild(id: String): Boolean {
-        require(id != DEFAULT_CHILD) { "第一个孩子不能删除，可以改名" }
+        require(id != DEFAULT_CHILD) { "El primer niño no se puede eliminar, pero sí cambiar de nombre" }
         val db = writableDatabase
         // 统一锁顺序：永远先 childLock、再 SQLite 写事务，避免与 switchChild()/activeChild() 产生 AB-BA 死锁
         synchronized(childLock) {
@@ -685,7 +685,7 @@ class LocalStore(
         synchronized(childLock) {
             ensureDefaultChild()
             val exists = readableDatabase.rawQuery("SELECT 1 FROM children WHERE id=? LIMIT 1", arrayOf(id)).use { it.moveToFirst() }
-            require(exists) { "孩子档案不存在" }
+            require(exists) { "El perfil del niño no existe" }
             rawSet("active_child", id)
             cachedChild = id
         }
@@ -789,36 +789,36 @@ class LocalStore(
     private fun normalizeWindows(raw: JSONArray?, counted: Boolean, label: String): JSONArray {
         val out = JSONArray()
         val source = raw ?: return out
-        require(source.length() <= 50) { "${label}最多 50 条" }
+        require(source.length() <= 50) { "${label}: máximo 50 entradas" }
         val pattern = Regex("([01][0-9]|2[0-3]):[0-5][0-9]")
         for (i in 0 until source.length()) {
-            val item = source.optJSONObject(i) ?: throw IllegalArgumentException("${label}格式不正确")
+            val item = source.optJSONObject(i) ?: throw IllegalArgumentException("El formato de ${label} no es correcto")
             val name = item.optString("name").trim()
-            require(name.isNotEmpty() && name.length <= 20) { "${label}名称需要 1–20 个字" }
+            require(name.isNotEmpty() && name.length <= 20) { "El nombre de ${label} debe tener entre 1 y 20 caracteres" }
             val start = item.optString("start")
             val end = item.optString("end")
-            require(pattern.matches(start) && pattern.matches(end)) { "${label}需要有效的开始和结束时间（精确到分钟）" }
-            require(start != end) { "${label}的开始与结束时间不能相同" }
+            require(pattern.matches(start) && pattern.matches(end)) { "${label} necesita una hora de inicio y fin válidas (con precisión de minutos)" }
+            require(start != end) { "La hora de inicio y fin de ${label} no pueden ser iguales" }
             val days = JSONArray()
             val seen = mutableSetOf<Int>()
             val rawDays = item.optJSONArray("days") ?: JSONArray()
             for (d in 0 until rawDays.length()) {
                 val day = rawDays.optInt(d, -1)
-                require(day in 0..6) { "${label}的星期设置不正确" }
+                require(day in 0..6) { "La configuración de días de ${label} no es correcta" }
                 if (seen.add(day)) days.put(day)
             }
-            require(days.length() > 0) { "请为${label}选择星期" }
+            require(days.length() > 0) { "Selecciona al menos un día para ${label}" }
             val clean = JSONObject()
                 .put("id", item.optString("id").trim().takeIf { it.isNotEmpty() && it.length <= 64 }
                     ?: ((if (counted) "tp_" else "ex_") + UUID.randomUUID()))
                 .put("name", name).put("days", days).put("start", start).put("end", end)
             if (counted) {
                 val mode = item.optString("mode", "free")
-                require(mode in listOf("free", "counted")) { "${label}的用途需要为自由使用或计入限额" }
+                require(mode in listOf("free", "counted")) { "El uso de ${label} debe ser «libre» o «contabilizado en el límite»" }
                 clean.put("mode", mode)
                 if (mode == "counted") {
                     val minutes = item.optInt("dailyMinutes", 0)
-                    require(minutes in 1..480) { "计入限额的${label}需要 1–480 分钟" }
+                    require(minutes in 1..480) { "${label} contabilizado necesita entre 1 y 480 minutos" }
                     clean.put("dailyMinutes", minutes)
                 }
             }
@@ -838,7 +838,7 @@ class LocalStore(
         ranges.forEach { (key, range) ->
             if (input.has(key)) {
                 val value = input.getDouble(key)
-                require(value.isFinite() && value == value.toInt().toDouble() && value.toInt() in range) { "$key 超出范围" }
+                require(value.isFinite() && value == value.toInt().toDouble() && value.toInt() in range) { "$key está fuera de rango" }
                 next.put(key, value.toInt())
             }
         }
@@ -846,50 +846,50 @@ class LocalStore(
         listOf("windowStart", "windowEnd").forEach { key ->
             if (input.has(key)) {
                 val valid = Regex("([01][0-9]|2[0-3]):[0-5][0-9]").matches(input.optString(key))
-                require(wantsAllDay || valid) { "请输入有效的开始和结束时间" }
+                require(wantsAllDay || valid) { "Introduce una hora de inicio y fin válidas" }
                 if (valid) next.put(key, input.getString(key))
             }
         }
         if (input.has("timezone")) {
             val zone = input.optString("timezone").trim()
-            require(zone in DeviceClock.ZONES) { "不支持的时区" }
+            require(zone in DeviceClock.ZONES) { "Zona horaria no compatible" }
             next.put("timezone", zone)
         }
         if (input.has("passRatio")) {
             val ratio = input.getDouble("passRatio")
-            require(ratio.isFinite() && ratio > 0 && ratio <= 1) { "答对比例需要大于 0 且不超过 100%" }
+            require(ratio.isFinite() && ratio > 0 && ratio <= 1) { "El ratio de aciertos debe ser mayor que 0 y no superar el 100 %" }
             next.put("passRatio", ratio)
         }
         if (input.has("learningContent")) {
-            require(input.getString("learningContent") in listOf("quiz", "video", "alternate")) { "未知学习内容模式" }
+            require(input.getString("learningContent") in listOf("quiz", "video", "alternate")) { "Modo de contenido de aprendizaje desconocido" }
             next.put("learningContent", input.getString("learningContent"))
         }
         if (input.has("educationalVideos")) {
             val urls = input.getJSONArray("educationalVideos")
-            require(urls.length() <= 50) { "最多 50 个公益视频" }
+            require(urls.length() <= 50) { "Máximo 50 vídeos educativos" }
             for (i in 0 until urls.length()) {
                 val url = urls.getString(i)
-                require(url.length <= 2048 && (url.startsWith("https://") || url.startsWith("http://"))) { "请使用 HTTP/HTTPS 视频直链" }
+                require(url.length <= 2048 && (url.startsWith("https://") || url.startsWith("http://"))) { "Usa un enlace directo de vídeo HTTP/HTTPS" }
                 if (LocalOnlyGuard.enabled) {
-                    require(LocalOnlyGuard.isLocalUrl(url)) { "仅本地隐私版（EU Local-Only）仅允许配置本机或局域网内的公益视频" }
+                    require(LocalOnlyGuard.isLocalUrl(url)) { "La versión de privacidad solo local (EU Local-Only) solo permite configurar vídeos educativos de este equipo o de la red local" }
                 }
             }
             next.put("educationalVideos", urls)
         }
         if (input.has("watchWhitelist")) {
-            val raw = input.optJSONArray("watchWhitelist") ?: throw IllegalArgumentException("白名单格式不正确")
+            val raw = input.optJSONArray("watchWhitelist") ?: throw IllegalArgumentException("El formato de la lista blanca no es correcto")
             val clean = JSONArray()
             WatchWhitelist.normalize((0 until raw.length()).map { raw.optString(it) }).forEach { clean.put(it) }
             next.put("watchWhitelist", clean)
         }
-        require(next.optString("learningContent", "quiz") == "quiz" || next.getJSONArray("educationalVideos").length() > 0) { "视频学习模式需要添加视频地址" }
+        require(next.optString("learningContent", "quiz") == "quiz" || next.getJSONArray("educationalVideos").length() > 0) { "El modo de aprendizaje con vídeo requiere añadir una dirección de vídeo" }
         if (input.has("playMode")) {
-            require(input.getString("playMode") in listOf("round", "streak", "practice", "count")) { "未知玩法" }
+            require(input.getString("playMode") in listOf("round", "streak", "practice", "count")) { "Modo de juego desconocido" }
             next.put("playMode", input.getString("playMode"))
         }
         if (input.has("spacedScope")) {
             val scope = input.optString("spacedScope")
-            require(scope in listOf("all", "wrong_only")) { "未知复习范围" }
+            require(scope in listOf("all", "wrong_only")) { "Ámbito de repaso desconocido" }
             next.put("spacedScope", scope)
         }
         listOf(
@@ -905,14 +905,14 @@ class LocalStore(
             val raw = input.getJSONArray(key)
             val clean = JSONArray()
             for (i in 0 until raw.length()) raw.optString(i).trim().takeIf { it.isNotEmpty() }?.let {
-                require(it.length <= 40) { "每句鼓励语不超过 40 个字" }
+                require(it.length <= 40) { "Cada frase de ánimo no puede superar los 40 caracteres" }
                 clean.put(it)
             }
-            require(clean.length() <= 30) { "鼓励语最多 30 句" }
+            require(clean.length() <= 30) { "Máximo 30 frases de ánimo" }
             next.put(key, if (clean.length() == 0) JSONArray(if (key == "praisePhrases") DEFAULT_PRAISE else DEFAULT_ENCOURAGE) else clean)
         }
         if (input.has("scheduleMode")) {
-            require(input.getString("scheduleMode") in listOf("allow", "control")) { "未知的时段用途" }
+            require(input.getString("scheduleMode") in listOf("allow", "control")) { "Uso de franja horaria desconocido" }
             next.put("scheduleMode", input.getString("scheduleMode"))
         }
         for (key in listOf("quizSubjects", "quizLevels", "quizBanks")) if (input.has(key)) {
@@ -924,29 +924,29 @@ class LocalStore(
             next.put(key, clean)
         }
         if (input.has("weekSlots")) {
-            val clean = normalizeWeek(input.optJSONArray("weekSlots")) ?: throw IllegalArgumentException("可用时段格式不正确")
+            val clean = normalizeWeek(input.optJSONArray("weekSlots")) ?: throw IllegalArgumentException("El formato de las franjas disponibles no es correcto")
             next.put("weekSlots", clean)
         }
-        if (input.has("timePoints")) next.put("timePoints", normalizeWindows(input.optJSONArray("timePoints"), true, "网课时段"))
-        if (input.has("exemptWindows")) next.put("exemptWindows", normalizeWindows(input.optJSONArray("exemptWindows"), false, "大人豁免时段"))
+        if (input.has("timePoints")) next.put("timePoints", normalizeWindows(input.optJSONArray("timePoints"), true, "franjas de clase en línea"))
+        if (input.has("exemptWindows")) next.put("exemptWindows", normalizeWindows(input.optJSONArray("exemptWindows"), false, "franjas exentas para adultos"))
         if (input.has("holidayMode")) {
-            require(input.getString("holidayMode") in listOf("sunday", "normal")) { "未知的节假日规则" }
+            require(input.getString("holidayMode") in listOf("sunday", "normal")) { "Regla de días festivos desconocida" }
             next.put("holidayMode", input.getString("holidayMode"))
         }
         if (input.has("theme")) {
-            require(input.getString("theme") in listOf("dark", "light", "system")) { "外观需要为深色、浅色或跟随系统" }
+            require(input.getString("theme") in listOf("dark", "light", "system")) { "El tema debe ser oscuro, claro o seguir al sistema" }
             next.put("theme", input.getString("theme"))
         }
         if (input.has("autoNextSeconds")) {
             val value = input.getInt("autoNextSeconds")
-            require(value in 0..30) { "自动下一题需要为 0–30 秒，0 表示手动" }
+            require(value in 0..30) { "El paso automático a la siguiente pregunta debe estar entre 0 y 30 segundos; 0 = manual" }
             next.put("autoNextSeconds", value)
         }
         if (input.has("difficultyRewards")) {
             val rewards = input.getJSONObject("difficultyRewards")
             for (star in 1..5) {
                 val minutes = rewards.getDouble(star.toString())
-                require(minutes.isFinite() && minutes in 0.1..120.0) { "每题奖励需要为 0.1–120 分钟" }
+                require(minutes.isFinite() && minutes in 0.1..120.0) { "La recompensa por pregunta debe estar entre 0,1 y 120 minutos" }
             }
             next.put("difficultyRewards", rewards)
         }
@@ -1428,8 +1428,8 @@ class LocalStore(
             }
             val start = dayStart.timeInMillis
             val label = when (offset) {
-                0 -> "今天"
-                1 -> "明天"
+                0 -> "Hoy"
+                1 -> "Mañana"
                 else -> "${dayStart.get(Calendar.MONTH) + 1}/${dayStart.get(Calendar.DAY_OF_MONTH)}"
             }
             dayStart.add(Calendar.DAY_OF_YEAR, 1)
@@ -1464,7 +1464,7 @@ class LocalStore(
                 val qid = c.getString(0) ?: ""
                 val stem = c.getString(1) ?: ""
                 val rawSubject = (c.getString(2) ?: "").trim()
-                val subjectKey = rawSubject.ifEmpty { "未分类" }
+                val subjectKey = rawSubject.ifEmpty { "Sin categoría" }
                 val level = c.getString(3) ?: ""
                 val bankKey = (c.getString(4) ?: "").trim().ifEmpty { "默认题库" }
                 val type = (c.getString(5) ?: "").ifBlank { "single" }
@@ -1548,8 +1548,8 @@ class LocalStore(
             if (ago == querySpan - 1) earliestStart = dCal.timeInMillis
             val dateStr = dayFmt.format(Date(dCal.timeInMillis))
             val label = when (ago) {
-                0 -> "今天"
-                1 -> "昨天"
+                0 -> "Hoy"
+                1 -> "Ayer"
                 else -> "${dCal.get(Calendar.MONTH) + 1}/${dCal.get(Calendar.DAY_OF_MONTH)}"
             }
             dayMap[dateStr] = DayBucket(dateStr, label, ago)
@@ -1680,55 +1680,55 @@ class LocalStore(
 
     fun upsertQuestion(item: JSONObject): String {
         val stem = item.optString("q").trim()
-        require(stem.isNotEmpty() && stem.length <= 10000) { "请填写题干" }
+        require(stem.isNotEmpty() && stem.length <= 10000) { "Escribe el enunciado" }
         val type = item.optString("type", "single")
-        require(type in listOf("single", "multiple", "boolean", "text", "subjective")) { "不支持此题型" }
-        val options = if (type == "boolean") JSONArray(listOf("正确", "错误")) else item.optJSONArray("a") ?: JSONArray()
+        require(type in listOf("single", "multiple", "boolean", "text", "subjective")) { "Tipo de pregunta no compatible" }
+        val options = if (type == "boolean") JSONArray(listOf("Correcto", "Incorrecto")) else item.optJSONArray("a") ?: JSONArray()
         val rawOptionImages = item.optJSONArray("optionImages")
         val normalizedOptionImages: JSONArray? = if (rawOptionImages != null) {
-            require(rawOptionImages.length() <= 8) { "选项配图不能超过 8 张" }
+            require(rawOptionImages.length() <= 8) { "Máximo 8 imágenes de opción" }
             JSONArray().also { arr ->
                 for (i in 0 until rawOptionImages.length()) {
                     val img = rawOptionImages.optString(i).trim()
-                    arr.put(if (img.isEmpty()) "" else MediaStore.normalizeImageRef(mediaDir, img, label = "选项 ${'A' + i} 配图"))
+                    arr.put(if (img.isEmpty()) "" else MediaStore.normalizeImageRef(mediaDir, img, label = "imagen de la opción ${'A' + i}"))
                 }
             }
         } else null
         if (type != "text" && type != "subjective") {
-            require(options.length() in 2..8) { "需要 2–8 个选项" }
+            require(options.length() in 2..8) { "Se necesitan entre 2 y 8 opciones" }
             for (i in 0 until options.length()) {
                 val optImg = normalizedOptionImages?.optString(i).orEmpty()
-                require(options.getString(i).isNotBlank() || optImg.isNotEmpty()) { "选项不能为空" }
+                require(options.getString(i).isNotBlank() || optImg.isNotEmpty()) { "La opción no puede estar vacía" }
             }
         }
         val indices = if (type == "multiple") item.optJSONArray("correctIndices") ?: JSONArray()
             else JSONArray().put(item.optInt("k", -1))
         if (type != "text" && type != "subjective") {
-            require(indices.length() > 0) { "请选择正确答案" }
-            for (i in 0 until indices.length()) require(indices.getInt(i) in 0 until options.length()) { "答案序号超出选项范围" }
+            require(indices.length() > 0) { "Selecciona la respuesta correcta" }
+            for (i in 0 until indices.length()) require(indices.getInt(i) in 0 until options.length()) { "El índice de respuesta está fuera del rango de opciones" }
         } else if (type == "text") {
             val answers = item.optJSONArray("answers") ?: JSONArray()
-            require(answers.length() > 0) { "填空题需要至少一个可接受的答案" }
-            for (i in 0 until answers.length()) require(answers.getString(i).isNotBlank()) { "答案不能为空" }
+            require(answers.length() > 0) { "Las preguntas de rellenar necesitan al menos una respuesta aceptable" }
+            for (i in 0 until answers.length()) require(answers.getString(i).isNotBlank()) { "La respuesta no puede estar vacía" }
         }
         val difficulty = item.optInt("difficulty", 2)
-        require(difficulty in 1..5) { "难度需要为 1–5 星" }
+        require(difficulty in 1..5) { "La dificultad debe ser de 1 a 5 estrellas" }
         val id = item.optString("id").ifEmpty { "q_" + UUID.randomUUID().toString() }
         val details = JSONObject(item.toString()).put("type", type)
         details.remove("stats")
         if (normalizedOptionImages != null) details.put("optionImages", normalizedOptionImages) else details.remove("optionImages")
         val bank = item.optString("bank", "默认题库").trim()
-        require(bank.isNotEmpty() && bank.length <= 64) { "题库名称需要 1–64 个字" }
+        require(bank.isNotEmpty() && bank.length <= 64) { "El nombre del banco debe tener entre 1 y 64 caracteres" }
         details.put("bank", bank)
         val rawImage = item.optString("image").trim()
-        details.put("image", if (rawImage.isEmpty()) "" else MediaStore.normalizeImageRef(mediaDir, rawImage, label = "图片"))
+        details.put("image", if (rawImage.isEmpty()) "" else MediaStore.normalizeImageRef(mediaDir, rawImage, label = "imagen"))
         val rawAudio = item.optString("audio").trim()
-        require(rawAudio.isEmpty() || ((rawAudio.startsWith("https://") || rawAudio.startsWith("http://")) && rawAudio.length <= 2048)) { "图片或音频地址无效" }
+        require(rawAudio.isEmpty() || ((rawAudio.startsWith("https://") || rawAudio.startsWith("http://")) && rawAudio.length <= 2048)) { "La dirección de imagen o audio no es válida" }
         details.put("audio", rawAudio)
         // 听力题：listen 只交给朗读，屏幕上不显示，等于「声音和文字解耦」；与音频地址二选一
         val listen = item.optString("listen").trim()
-        require(listen.isEmpty() || listen.length <= 1000) { "听力文本不能超过 1000 字" }
-        require(listen.isEmpty() || rawAudio.isEmpty()) { "听力文本和音频地址只能二选一" }
+        require(listen.isEmpty() || listen.length <= 1000) { "El texto de comprensión auditiva no puede superar los 1000 caracteres" }
+        require(listen.isEmpty() || rawAudio.isEmpty()) { "El texto de comprensión auditiva y la dirección de audio son excluyentes" }
         details.put("listen", listen)
         if (listen.isEmpty()) {
             details.remove("listenTimes"); details.remove("listenRequired"); details.remove("listenRate")
@@ -1740,12 +1740,12 @@ class LocalStore(
         }
         if (item.has("images")) {
             val rawImages = item.optJSONArray("images") ?: JSONArray()
-            require(rawImages.length() <= 4) { "每道题最多支持 4 张配图" }
+            require(rawImages.length() <= 4) { "Máximo 4 imágenes por pregunta" }
             val validImages = JSONArray()
             for (i in 0 until rawImages.length()) {
                 val value = rawImages.optString(i).trim()
                 if (value.isEmpty()) continue
-                validImages.put(MediaStore.normalizeImageRef(mediaDir, value, label = "第 ${i + 1} 张配图"))
+                validImages.put(MediaStore.normalizeImageRef(mediaDir, value, label = "imagen n.º ${i + 1}"))
             }
             details.put("images", validImages)
             if (details.optString("image").isEmpty() && validImages.length() > 0) {
@@ -1753,12 +1753,12 @@ class LocalStore(
             }
         }
         val language = item.optString("language", "zh-CN")
-        require(language in SpeechReader.LANGUAGES) { "朗读/识别语言需要为中文、粤语或英文，留空表示跟随系统" }
+        require(language in SpeechReader.LANGUAGES) { "El idioma de lectura/reconocimiento debe ser chino, cantonés o inglés; déjalo vacío para seguir al sistema" }
         details.put("language", language)
         val enabled = if (!item.has("enabled") || item.optBoolean("enabled", true)) 1 else 0
         val createdAt = item.optLong("createdAt", System.currentTimeMillis())
         writableDatabase.insertWithOnConflict("questions", null, ContentValues().apply {
-            put("id", id); put("subject", item.optString("subject", "常识"))
+            put("id", id); put("subject", item.optString("subject", "Cultura general"))
             put("level", item.optString("level", "")); put("difficulty", difficulty)
             put("stem", stem); put("options", options.toString()); put("answer", if (type == "text" || type == "subjective") 0 else indices.getInt(0))
             put("tip", item.optString("tip")); put("enabled", enabled); put("created_at", createdAt)
@@ -1794,7 +1794,7 @@ class LocalStore(
      * 返回真正新增的条数和跳过的条数；带 id 且已存在的题仍然按覆盖处理。
      */
     fun importQuestions(items: JSONArray, skipDuplicates: Boolean = false): JSONObject {
-        require(items.length() in 1..50000) { "每次导入 1–50000 道题" }
+        require(items.length() in 1..50000) { "Cada importación debe tener entre 1 y 50000 preguntas" }
         val db = writableDatabase
         val ids = HashSet<String>()
         val stems = HashSet<String>()
@@ -1810,7 +1810,7 @@ class LocalStore(
         db.beginTransaction()
         try {
             for (i in 0 until items.length()) {
-                val item = items.optJSONObject(i) ?: throw IllegalArgumentException("第 ${i + 1} 题：不是一条题目对象")
+                val item = items.optJSONObject(i) ?: throw IllegalArgumentException("Pregunta ${i + 1}: no es un objeto de pregunta")
                 if (skipDuplicates) {
                     val id = item.optString("id")
                     val key = stemKey(item.optString("q"))
@@ -1819,7 +1819,7 @@ class LocalStore(
                     if (id.isNotEmpty()) ids.add(id)
                 }
                 try { upsertQuestion(item) } catch (e: IllegalArgumentException) {
-                    throw IllegalArgumentException("第 ${i + 1} 题：${e.message}")
+                    throw IllegalArgumentException("Pregunta ${i + 1}: ${e.message}")
                 }
                 added++
             }
@@ -1974,8 +1974,8 @@ class LocalStore(
     }
 
     fun restoreBackup(backup: JSONObject, mode: String = "replace"): JSONObject {
-        require(backup.optString("format") == "studyontv-backup") { "不是有效的题了个题备份文件" }
-        require(mode in listOf("replace", "merge")) { "恢复模式仅支持 replace 或 merge" }
+        require(backup.optString("format") == "studyontv-backup") { "No es un archivo de copia de seguridad válido de 题了个题" }
+        require(mode in listOf("replace", "merge")) { "El modo de restauración solo admite replace o merge" }
         val replace = mode == "replace"
         val db = writableDatabase
 
@@ -2003,7 +2003,7 @@ class LocalStore(
                 for (i in 0 until minOf(arr.length(), MAX_CHILDREN)) {
                     val c = arr.optJSONObject(i) ?: continue
                     val id = c.optString("id")
-                    val name = c.optString("name").trim().ifEmpty { "孩子${i + 1}" }.take(12)
+                    val name = c.optString("name").trim().ifEmpty { "Niño ${i + 1}" }.take(12)
                     db.insertWithOnConflict("children", null, ContentValues().apply {
                         put("id", id)
                         put("name", name)
@@ -2223,7 +2223,7 @@ class LocalStore(
             val cal = today.clone() as Calendar
             cal.add(Calendar.DAY_OF_YEAR, -d)
             val start = cal.timeInMillis
-            val label = if (d == 0) "今天" else if (d == 1) "昨天" else "${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)}"
+            val label = if (d == 0) "Hoy" else if (d == 1) "Ayer" else "${cal.get(Calendar.MONTH) + 1}/${cal.get(Calendar.DAY_OF_MONTH)}"
             cal.add(Calendar.DAY_OF_YEAR, 1)
             out.put(stats(start, cal.timeInMillis).put("label", label))
         }
