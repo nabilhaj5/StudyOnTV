@@ -19,15 +19,17 @@ object AdminAuth {
     private const val MAX_LOCKOUT_MS = 300_000L
 
     /**
-     * 单调时钟：电视刚开机尚未完成 NTP 校时，墙上时钟可能从 1970 跳到当前年份（或被孩子修改系统时间）。
-     * 会话过期与输错密码冷却统一采用单调时钟；纯 JVM 单元测试里 `elapsedRealtime()` 返回 0 时自动回退到 `nanoTime`。
+     * Reloj monotónico: cuando la TV acaba de encenderse y aún no ha completado la sincronización NTP, el reloj de pared
+     * puede saltar de 1970 al año actual (o el niño puede modificar la hora del sistema).
+     * La expiración de sesión y el enfriamiento por contraseña incorrecta usan uniformemente el reloj monotónico; en pruebas
+     * unitarias de JVM pura, cuando `elapsedRealtime()` devuelve 0 se recurre automáticamente a `nanoTime`.
      */
     internal fun monotonicMs(): Long {
         val elapsed = try { SystemClock.elapsedRealtime() } catch (_: Throwable) { 0L }
         return if (elapsed > 0L) elapsed else ((System.nanoTime() - jvmStartNano) / 1_000_000L) + 1_000L
     }
 
-    /** 累计连续输错次数对应的锁定冷却时长：第 5 次 60s、第 10 次 120s、第 15 次及以后每 5 次 300s。 */
+    /** Duración del enfriamiento de bloqueo según el número acumulado de fallos consecutivos: 5.º 60s, 10.º 120s, 15.º y posteriores cada 5 fallos 300s. */
     internal fun lockoutDurationMs(cumulativeFailures: Int): Long = when {
         cumulativeFailures < 5 || cumulativeFailures % 5 != 0 -> 0L
         cumulativeFailures == 5 -> 60_000L
@@ -47,7 +49,7 @@ object AdminAuth {
 
     @Synchronized
     fun setPassword(context: Context, value: String) {
-        require(value.length in 6..64) { "管理密码需要 6–64 位" }
+        require(value.length in 6..64) { "La contraseña de administración debe tener entre 6 y 64 caracteres" }
         val salt = ByteArray(16).also { random.nextBytes(it) }
         prefs(context).edit()
             .putString("salt", MediaStore.encodeBase64(salt))
@@ -63,7 +65,7 @@ object AdminAuth {
         val p = prefs(context)
         val nowMono = monotonicMs()
         val persistedUntil = p.getLong("blocked_until", 0L)
-        // 重启后若 persistedUntil 来自上次开机（剩余时间远超最大锁定时长 300s），忽略残留值防止误锁数小时
+        // Tras reiniciar, si persistedUntil procede del arranque anterior (tiempo restante muy superior al bloqueo máximo de 300s), se ignora el valor residual para evitar bloqueos erróneos de horas
         val persistedActive = (persistedUntil - nowMono) in 1..MAX_LOCKOUT_MS
         if (!configured(context) || value.length !in 6..64 || nowMono < blockedUntilMono || persistedActive) {
             return false
@@ -84,7 +86,7 @@ object AdminAuth {
         return ok
     }
 
-    /** 签发新的管理会话令牌；修改密码后可直接给当前管理员续发新令牌而不必被踢回登录页。 */
+    /** Emite un nuevo token de sesión de administración; tras cambiar la contraseña se puede renovar el token al administrador actual sin expulsarlo a la página de inicio de sesión. */
     @Synchronized
     fun issueSession(remember: Boolean = false, context: Context? = null): String {
         val nowMono = monotonicMs()
@@ -130,7 +132,7 @@ object AdminAuth {
 
     @Volatile private var verifiedAt = 0L
 
-    /** 刚在本机设置或验证过密码（2 分钟内）：从权限引导页进入家长设置时不必再输一次 */
+    /** Se acaba de establecer o verificar la contraseña en este dispositivo (en menos de 2 minutos): al entrar en los ajustes de padres desde la página de guía de permisos no hace falta volver a introducirla */
     fun markVerified() { verifiedAt = monotonicMs() }
     fun recentlyVerified(): Boolean = verifiedAt > 0 && monotonicMs() - verifiedAt < 120_000L
 
