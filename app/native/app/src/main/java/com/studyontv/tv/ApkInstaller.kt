@@ -11,7 +11,6 @@ import java.net.URL
 
 
 
-
 object ApkInstaller {
 
     private fun dir(ctx: Context): File = File(ctx.cacheDir, "updates").apply { mkdirs() }
@@ -35,14 +34,14 @@ object ApkInstaller {
     @Suppress("DEPRECATION")
     private fun validUpdate(ctx: Context, file: File): Boolean {
         val flags = if (Build.VERSION.SDK_INT >= 28) android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES else android.content.pm.PackageManager.GET_SIGNATURES
-        val archive = ctx.packageManager.getPackageArchiveInfo(file.absolutePath, flags) ?: run { lastError = "安装包损坏或不完整"; return false }
+        val archive = ctx.packageManager.getPackageArchiveInfo(file.absolutePath, flags) ?: run { lastError = "El paquete de instalación está dañado o incompleto"; return false }
         archive.applicationInfo?.let { it.sourceDir = file.absolutePath; it.publicSourceDir = file.absolutePath }
         val current = ctx.packageManager.getPackageInfo(ctx.packageName, flags)
-        if (archive.packageName != ctx.packageName) { lastError = "安装包与本应用不符"; return false }
-        if (archive.versionCode <= current.versionCode) { lastError = "安装包版本不比当前新"; return false }
+        if (archive.packageName != ctx.packageName) { lastError = "El paquete de instalación no corresponde a esta aplicación"; return false }
+        if (archive.versionCode <= current.versionCode) { lastError = "La versión del paquete no es más reciente que la actual"; return false }
         val mine = signatures(ctx, current)
         val theirs = signatures(ctx, archive)
-        if (mine.isEmpty() || theirs.isEmpty() || mine.intersect(theirs).isEmpty()) { lastError = "安装包签名与当前版本不一致，已拒绝"; return false }
+        if (mine.isEmpty() || theirs.isEmpty() || mine.intersect(theirs).isEmpty()) { lastError = "La firma del paquete no coincide con la versión actual, se ha rechazado"; return false }
         return true
     }
 
@@ -54,7 +53,7 @@ object ApkInstaller {
     /** 依次尝试直连和各个加速镜像，任一线路成功即返回；若蒲公英签名链接过期返回 HTML，自动刷新一次下载地址重试 */
     fun download(ctx: Context, url: String, sha256: String, onSource: (String) -> Unit, onProgress: (Int) -> Unit): File? {
         if (LocalOnlyGuard.enabled) {
-            lastError = "仅本地隐私版（EU Local-Only）已禁用应用内下载与安装"
+            lastError = "La versión de privacidad local (EU Local-Only) ha desactivado la descarga e instalación desde la app"
             return null
         }
         lastError = ""
@@ -62,18 +61,18 @@ object ApkInstaller {
             onSource(name)
             val file = downloadFrom(ctx, candidate, sha256, onProgress)
             if (file != null) { Prefs.setUpdateLastSource(ctx, name); return file }
-            if (lastError.contains("签名") || lastError.contains("校验")) android.util.Log.w("StudyOnTV", "Rejected update from $name: $lastError")
+            if (lastError.contains("firma") || lastError.contains("verificación")) android.util.Log.w("StudyOnTV", "Rejected update from $name: $lastError")
         }
         // #183：蒲公英 downloadURL 带有时效签名（?sig=...），缓存过期后会返回 HTML 网页；自动重新检查一次拿到新直链再试
-        if (url.contains("pgyer.com/", ignoreCase = true) && !lastError.contains("签名与当前版本不一致")) {
+        if (url.contains("pgyer.com/", ignoreCase = true) && !lastError.contains("firma no coincide con la versión actual")) {
             val refreshed = try { Updater.checkNow(ctx).first } catch (_: Exception) { null }
             val freshUrl = refreshed?.url.orEmpty()
             if (freshUrl.isNotEmpty() && freshUrl != url) {
                 Diag.info("Update", "Pgyer download url refreshed after failure ($lastError), retrying")
                 lastError = ""
-                onSource("蒲公英（已刷新）")
+                onSource("Pgyer (actualizado)")
                 val retryFile = downloadFrom(ctx, freshUrl, refreshed?.sha256.orEmpty().ifEmpty { sha256 }, onProgress)
-                if (retryFile != null) { Prefs.setUpdateLastSource(ctx, "蒲公英"); return retryFile }
+                if (retryFile != null) { Prefs.setUpdateLastSource(ctx, "Pgyer"); return retryFile }
             }
         }
         return null
@@ -111,7 +110,7 @@ object ApkInstaller {
                     val loc = conn!!.getHeaderField("Location") ?: break
                     val nextUrl = URL(currentUrl, loc)
                     if (nextUrl.protocol !in listOf("http", "https")) {
-                        lastError = "不支持的重定向协议：${nextUrl.protocol}"
+                        lastError = "Protocolo de redirección no soportado: ${nextUrl.protocol}"
                         return null
                     }
                     currentUrl = nextUrl
@@ -119,10 +118,10 @@ object ApkInstaller {
                 }
                 break
             }
-            if (redirectCode !in 200..299) { lastError = "下载失败（HTTP $redirectCode）"; return null }
+            if (redirectCode !in 200..299) { lastError = "Error de descarga (HTTP $redirectCode)"; return null }
             val contentType = conn!!.contentType.orEmpty().lowercase(java.util.Locale.US)
             if (contentType.startsWith("text/html") || contentType.startsWith("application/json")) {
-                lastError = "下载链接已过期或返回了网页（$contentType），请重试"
+                lastError = "El enlace de descarga ha caducado o ha devuelto una página web ($contentType). Inténtalo de nuevo"
                 Diag.warn("Update", "download rejected non-apk content-type=$contentType url=${currentUrl.host}")
                 return null
             }
@@ -140,7 +139,7 @@ object ApkInstaller {
                             checkedMagic = true
                             // APK 必然以 ZIP 魔数 PK (0x50 0x4B) 开头，若返回 HTML 立即中止
                             if (read < 2 || buf[0] != 0x50.toByte() || buf[1] != 0x4B.toByte()) {
-                                lastError = "下载内容不是有效的 APK 安装包（可能链接已过期）"
+                                lastError = "El contenido descargado no es un paquete APK válido (puede que el enlace haya caducado)"
                                 Diag.warn("Update", "download rejected non-zip magic from ${currentUrl.host}")
                                 return null
                             }
@@ -155,14 +154,14 @@ object ApkInstaller {
                 }
             }
             val actual = digest.digest().joinToString("") { "%02x".format(it) }
-            if (sha256.isNotEmpty() && !actual.equals(sha256, true)) { lastError = "安装包校验失败（SHA-256 不一致）"; return null }
+            if (sha256.isNotEmpty() && !actual.equals(sha256, true)) { lastError = "Error de verificación del paquete (SHA-256 no coincide)"; return null }
             if (!validUpdate(ctx, partial)) return null
             if (target.exists()) target.delete()
-            if (!partial.renameTo(target)) { lastError = "无法保存安装包"; return null }
+            if (!partial.renameTo(target)) { lastError = "No se puede guardar el paquete de instalación"; return null }
             onProgress(100)
             return target
         } catch (e: Exception) {
-            lastError = "下载中断：" + (e.message ?: e.javaClass.simpleName).take(80)
+            lastError = "Descarga interrumpida: " + (e.message ?: e.javaClass.simpleName).take(80)
             return null
         } finally {
             partial.delete()
@@ -175,7 +174,7 @@ object ApkInstaller {
         Prefs.setUpdateInstallError(ctx, "")
         if (!canInstall(ctx)) {
             // Android 8 起「安装未知应用」是按应用授权的，没开的话调起安装器只会失败，先把话说清楚
-            lastError = "系统还没允许「题了个题」安装应用"
+            lastError = "El sistema aún no permite que «StudyOnTV» instale aplicaciones"
             Diag.warn("Install", "canRequestPackageInstalls=false, install not started")
             return false
         }
@@ -230,7 +229,7 @@ object ApkInstaller {
         } catch (e: Exception) {
             if (sessionId >= 0) try { installer.abandonSession(sessionId) } catch (_: Exception) { }
             Diag.warn("Install", "session install failed, falling back to ACTION_VIEW: ${e.javaClass.simpleName} ${e.message}")
-            lastError = "安装会话失败：" + (e.message ?: e.javaClass.simpleName).take(80)
+            lastError = "Fallo en la sesión de instalación: " + (e.message ?: e.javaClass.simpleName).take(80)
             return false
         }
     }
@@ -238,7 +237,7 @@ object ApkInstaller {
     /** 会话走不通时（例如电视限制了后台拉起确认页）退回系统安装器 */
     fun fallbackToView(ctx: Context): Boolean {
         val file = apkFile(ctx)
-        if (!file.exists()) { lastError = "安装包已丢失，请重新下载"; return false }
+        if (!file.exists()) { lastError = "El paquete de instalación se ha perdido, vuelve a descargarlo"; return false }
         return installView(ctx, file)
     }
 
@@ -259,7 +258,7 @@ object ApkInstaller {
             Diag.info("Install", "ACTION_VIEW installer started")
             true
         } catch (e: Exception) {
-            lastError = "这台电视没有可用的安装器，请用「手动下载」到电视上安装"
+            lastError = "Esta TV no tiene un instalador disponible, usa «Descarga manual» para instalarlo en la TV"
             Diag.error("Install", "no installer activity", e)
             false
         }
