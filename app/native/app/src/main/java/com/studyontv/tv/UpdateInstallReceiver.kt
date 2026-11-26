@@ -36,7 +36,7 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             // 拉不起确认页（部分电视限制后台启动界面）：退回交给系统安装器
             if (ApkInstaller.fallbackToView(context)) Diag.info("Install", "fallback installer started")
             else {
-                Prefs.setUpdateInstallError(context, ApkInstaller.lastError.ifEmpty { "无法打开安装确认页" })
+                Prefs.setUpdateInstallError(context, ApkInstaller.lastError.ifEmpty { "No se puede abrir la página de confirmación de instalación" })
                 Prefs.setUpdateInProgress(context, false)
             }
             return
@@ -48,16 +48,16 @@ class UpdateInstallReceiver : BroadcastReceiver() {
             return
         }
         val text = when (status) {
-            PackageInstaller.STATUS_PENDING_USER_ACTION -> "等待用户确认安装"
-            PackageInstaller.STATUS_FAILURE_ABORTED -> "安装被取消"
-            PackageInstaller.STATUS_FAILURE_BLOCKED -> "系统禁止安装这个应用"
-            PackageInstaller.STATUS_FAILURE_CONFLICT -> "安装包与已安装版本冲突"
-            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> "安装包与这台电视的系统不兼容"
-            PackageInstaller.STATUS_FAILURE_INVALID -> "安装包无效或已损坏"
-            PackageInstaller.STATUS_FAILURE_STORAGE -> "电视存储空间不足"
-            else -> "安装失败（状态 $status）"
+            PackageInstaller.STATUS_PENDING_USER_ACTION -> "Esperando la confirmación del usuario para instalar"
+            PackageInstaller.STATUS_FAILURE_ABORTED -> "Instalación cancelada"
+            PackageInstaller.STATUS_FAILURE_BLOCKED -> "El sistema prohíbe instalar esta aplicación"
+            PackageInstaller.STATUS_FAILURE_CONFLICT -> "El paquete de instalación entra en conflicto con la versión ya instalada"
+            PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> "El paquete de instalación no es compatible con el sistema de este televisor"
+            PackageInstaller.STATUS_FAILURE_INVALID -> "El paquete de instalación no es válido o está dañado"
+            PackageInstaller.STATUS_FAILURE_STORAGE -> "No hay espacio de almacenamiento suficiente en el televisor"
+            else -> "Error de instalación (estado $status)"
         }
-        val detail = if (message.isBlank()) text else "$text：$message"
+        val detail = if (message.isBlank()) text else "$text: $message"
         Diag.error("Install", "install failed status=$status message=$message")
         Prefs.setUpdateInstallError(context, detail.take(300))
         Prefs.setUpdateInProgress(context, false)
