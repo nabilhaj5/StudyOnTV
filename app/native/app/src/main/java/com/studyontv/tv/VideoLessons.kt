@@ -14,7 +14,7 @@ class VideoLessons(private val store: LocalStore) {
                 context.startActivity(android.content.Intent(context, EducationalVideoActivity::class.java)
                     .putExtra("lessonId", lesson.getString("id")).putExtra("url", lesson.getString("url"))
                     .apply { if (context !is android.app.Activity) addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK) })
-            } catch (e: Exception) { android.widget.Toast.makeText(context, e.message ?: "无法打开视频", android.widget.Toast.LENGTH_SHORT).show() }
+            } catch (e: Exception) { android.widget.Toast.makeText(context, e.message ?: "No se puede abrir el vídeo", android.widget.Toast.LENGTH_SHORT).show() }
         }
     }
     fun wanted(config: JSONObject): Boolean = config.optString("learningContent", "quiz") == "video" ||
@@ -22,7 +22,7 @@ class VideoLessons(private val store: LocalStore) {
     fun start(config: JSONObject): JSONObject {
         val requiredMs = config.optLong("videoMinutes", 1).coerceIn(1, 30) * 60000L
         val urls = config.optJSONArray("educationalVideos") ?: JSONArray()
-        require(urls.length() > 0) { "请先由家长添加公益视频地址" }
+        require(urls.length() > 0) { "Primero el padre debe añadir una dirección de vídeo educativo" }
         val existing = store.get("video_lesson")
         if (existing.isNotBlank()) {
             val lesson = try { JSONObject(existing) } catch (_: Exception) { null }
@@ -60,8 +60,8 @@ class VideoLessons(private val store: LocalStore) {
     }
     fun complete(id: String) {
         val result = progress(id, false)
-        require(!result.optBoolean("expired")) { "视频任务已更新，请重新开始" }
-        require(result.optLong("remainingSeconds") == 0L) { "请先完成视频学习时长" }
+        require(!result.optBoolean("expired")) { "La tarea de vídeo se ha actualizado; vuelve a empezar" }
+        require(result.optLong("remainingSeconds") == 0L) { "Primero completa el tiempo de estudio del vídeo" }
         store.set("video_lesson", "")
         store.set("video_sequence", ((store.get("video_sequence", "0").toIntOrNull() ?: 0) + 1).toString())
     }
