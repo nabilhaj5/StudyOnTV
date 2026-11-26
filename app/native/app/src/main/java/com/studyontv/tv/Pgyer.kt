@@ -43,17 +43,17 @@ object Pgyer {
             connection.outputStream.use { it.write(form.toByteArray(Charsets.UTF_8)) }
             val code = connection.responseCode
             val text = (if (code in 200..299) connection.inputStream else connection.errorStream)?.use { it.readBytes().toString(Charsets.UTF_8) }.orEmpty()
-            require(code in 200..299) { "蒲公英返回 HTTP $code" }
-            require(text.length < 1_000_000) { "蒲公英响应过大" }
+            require(code in 200..299) { "Pgyer devolvió HTTP $code" }
+            require(text.length < 1_000_000) { "La respuesta de Pgyer es demasiado grande" }
             val root = JSONObject(text)
-            require(root.optInt("code", 0) == 0) { root.optString("message").ifEmpty { "蒲公英检查更新失败" } }
+            require(root.optInt("code", 0) == 0) { root.optString("message").ifEmpty { "Error al comprobar la actualización en Pgyer" } }
             val data = root.optJSONObject("data") ?: return null
             if (!data.optBoolean("haveNewVersion", false)) return null
             val version = data.optString("version").trim().removePrefix("v")
             if (version.isEmpty() || !Updater.isNewer(version, current)) return null
             val url = data.optString("downloadURL").trim()
                 .replaceFirst("http://", "https://")
-            require(url.startsWith("https://www.pgyer.com/app/installUpdate/")) { "蒲公英没有返回可用的安装地址" }
+            require(url.startsWith("https://www.pgyer.com/app/installUpdate/")) { "Pgyer no ha devuelto una dirección de instalación válida" }
             val notes = data.optString("releaseNote").ifEmpty { "Update" }
             Diag.info("Update", "Pgyer found v$version build=${data.optString("build")} force=${data.optBoolean("needForceUpdate")}")
             return Updater.Info(version, current, data.optBoolean("needForceUpdate", false),
