@@ -41,7 +41,7 @@ object MediaStore {
     @Suppress("NewApi")
     internal fun decodeBase64(raw: String): ByteArray {
         val clean = raw.trim()
-        require(clean.isNotEmpty()) { "图片数据为空" }
+        require(clean.isNotEmpty()) { "Los datos de la imagen están vacíos" }
         try {
             val decoded = android.util.Base64.decode(clean, android.util.Base64.DEFAULT)
             if (decoded != null) return decoded
@@ -76,23 +76,23 @@ object MediaStore {
         val prefix = "data:image/"
         val marker = ";base64,"
         val markerIndex = trimmed.indexOf(marker, ignoreCase = true)
-        require(trimmed.startsWith(prefix, ignoreCase = true) && markerIndex > prefix.length) { "图片格式不受支持" }
+        require(trimmed.startsWith(prefix, ignoreCase = true) && markerIndex > prefix.length) { "Formato de imagen no compatible" }
         val subtype = trimmed.substring(prefix.length, markerIndex).lowercase(Locale.US)
         val ext = when (subtype) {
             "jpeg", "jpg" -> "jpg"
             "webp" -> "webp"
             "png" -> "png"
             "gif" -> "gif"
-            else -> throw IllegalArgumentException("不支持的图片格式：$subtype")
+            else -> throw IllegalArgumentException("Formato de imagen no compatible: $subtype")
         }
         val payload = trimmed.substring(markerIndex + marker.length)
         val bytes = decodeBase64(payload)
-        require(bytes.isNotEmpty() && bytes.size <= maxDecodedBytes) { "图片大小超出限制" }
+        require(bytes.isNotEmpty() && bytes.size <= maxDecodedBytes) { "El tamaño de la imagen supera el límite" }
         val sha256 = MessageDigest.getInstance("SHA-256").digest(bytes)
             .joinToString("") { "%02x".format(Locale.US, it) }
         val name = "$sha256.$ext"
         if (!dir.exists() && !dir.mkdirs() && !dir.exists()) {
-            throw IllegalStateException("无法创建媒体目录")
+            throw IllegalStateException("No se puede crear el directorio de medios")
         }
         val target = File(dir, name)
         if (!target.exists() || target.length() != bytes.size.toLong()) {
@@ -124,7 +124,7 @@ object MediaStore {
         raw: String,
         maxDataUrlLen: Int = 900_000,
         maxDecodedBytes: Int = 650_000,
-        label: String = "配图"
+        label: String = "imagen"
     ): String {
         val value = raw.trim()
         if (value.isEmpty()) return ""
@@ -134,10 +134,10 @@ object MediaStore {
             return try {
                 saveDataUrl(dir, value, maxDecodedBytes)
             } catch (e: IllegalArgumentException) {
-                throw IllegalArgumentException("${label}地址无效")
+                throw IllegalArgumentException("La dirección de la $label no es válida")
             }
         }
-        throw IllegalArgumentException("${label}地址无效")
+        throw IllegalArgumentException("La dirección de la $label no es válida")
     }
 
     /** 严格按文件名白名单读取媒体字节与 MIME，彻底阻断目录穿越。 */
