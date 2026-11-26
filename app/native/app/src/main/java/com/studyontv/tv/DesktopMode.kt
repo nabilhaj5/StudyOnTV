@@ -37,7 +37,7 @@ object DesktopMode {
         val entries = pm.queryIntentActivities(intent, PackageManager.GET_DISABLED_COMPONENTS).map { it.activityInfo }
         val name = entries.firstOrNull { it.targetActivity == HOME_ACTIVITY }?.name
             ?: entries.firstOrNull { it.name.endsWith(ALIAS_SUFFIX) }?.name
-            ?: throw IllegalStateException("找不到电视桌面入口")
+            ?: throw IllegalStateException("No se encuentra la entrada del escritorio del televisor")
         return ComponentName(context.packageName, name)
     }
 
@@ -81,12 +81,12 @@ object DesktopMode {
     }
 
     fun setEnabled(context: Context, on: Boolean): JSONObject {
-        if (!supported) throw IllegalStateException("这个安装包不带电视桌面")
+        if (!supported) throw IllegalStateException("Este paquete de instalación no incluye el escritorio del televisor")
         val pm = context.packageManager
         pm.setComponentEnabledSetting(alias(context),
             if (on) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
             PackageManager.DONT_KILL_APP)
-        if (enabled(context) != on) throw IllegalStateException(if (on) "开启电视桌面失败" else "关闭电视桌面失败")
+        if (enabled(context) != on) throw IllegalStateException(if (on) "No se pudo activar el escritorio del televisor" else "No se pudo desactivar el escritorio del televisor")
         Diag.info("Desktop", "desktop ${if (on) "enabled" else "disabled"} by parent")
         // 开启后立刻把用户送到选择桌面；关闭时如果自己正占着 Home，也要发一次让系统接手
         if (on || isDefault(context)) openChooser(context)
