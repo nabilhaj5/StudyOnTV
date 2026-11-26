@@ -50,15 +50,15 @@ class EducationalVideoActivity : Activity() {
             val progress = DeviceRuntime.learning.videoProgress(id, video.isPlaying)
             if (progress.optBoolean("expired")) {
                 // 任务跨天或已被重新生成：退出播放页回到学习页，别让孩子卡在一个不会再涨的任务上
-                status.text = "观看任务已更新，请重新开始"
+                status.text = "La tarea de vídeo se ha actualizado; vuelve a empezar"
                 Diag.info("Video", "lesson expired, leaving player id=$id")
                 finish()
                 return false
             }
             val seconds = progress.optLong("remainingSeconds")
-            status.text = if (seconds > 0) "公益视频学习 · 还需观看 $seconds 秒" else "观看完成，可以领取使用时间"
+            status.text = if (seconds > 0) "Estudio con vídeo educativo · quedan $seconds segundos de visualización" else "Visualización completada; ya puedes reclamar el tiempo de uso"
             complete.isEnabled = seconds == 0L
-        } catch (e: Exception) { fail(e.message ?: "视频任务出错") ; return false }
+        } catch (e: Exception) { fail(e.message ?: "Error en la tarea de vídeo") ; return false }
         return true
     }
     /** true = 还在正常播；false = 已经报错并停住（不要继续循环） */
@@ -67,11 +67,11 @@ class EducationalVideoActivity : Activity() {
         val playing = ::video.isInitialized && video.isPlaying
         val message = when {
             preparedAt > 0 && !renderStarted && playing && now - preparedAt > RENDER_TIMEOUT_MS ->
-                "视频有声音但没有画面：这台电视可能不支持这个编码，请换一个 H.264 编码的 MP4 直链，或请家长切换为答题模式"
+                "El vídeo tiene sonido pero no imagen: puede que este televisor no admita este códec. Usa un enlace directo MP4 con codificación H.264, o pide al padre que cambie al modo de preguntas"
             preparedAt > 0 && !renderStarted && now - preparedAt > LOAD_TIMEOUT_MS ->
-                "视频一直没有开始播放，请确认地址是可以直接下载的 mp4 文件，且电视能访问它"
+                "El vídeo no ha empezado a reproducirse; comprueba que la dirección sea un archivo MP4 descargable directamente y que el televisor pueda acceder a él"
             preparedAt == 0L && now - openedAt > LOAD_TIMEOUT_MS ->
-                "视频加载超时，请检查公益视频直链（需要 mp4 等媒体文件，不是网页地址）与网络"
+                "Se agotó el tiempo de carga del vídeo; revisa el enlace directo del vídeo educativo (debe ser un archivo multimedia como MP4, no una página web) y la red"
             else -> ""
         }
         if (message.isEmpty()) return true
@@ -91,7 +91,7 @@ class EducationalVideoActivity : Activity() {
         openedAt = SystemClock.elapsedRealtime()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL;setPadding(20,20,20,20);setBackgroundColor(TvUi.background(this@EducationalVideoActivity)) }
-        status = TvUi.text(this, "加载公益视频…", 20f)
+        status = TvUi.text(this, "Cargando vídeo educativo…", 20f)
         root.addView(status)
         video = VideoView(this).apply {
             // 公益视频是普通媒体内容，用 USAGE_MEDIA 才能走电视的主音频输出；
@@ -111,27 +111,27 @@ class EducationalVideoActivity : Activity() {
                 when {
                     // 画面正常、时长不够：继续播下一条，这是「看满 N 分钟」的应有行为
                     resumed && renderStarted && failure.isEmpty() && !complete.isEnabled -> start()
-                    failure.isEmpty() && !renderStarted -> fail("视频没有画面，已停止重播；请换一个 H.264 编码的 MP4 直链，或请家长切换为答题模式")
+                    failure.isEmpty() && !renderStarted -> fail("El vídeo no tiene imagen y se ha detenido la repetición; usa un enlace directo MP4 con codificación H.264, o pide al padre que cambie al modo de preguntas")
                 }
             }
             setOnErrorListener { _, what, extra ->
-                fail("视频无法播放（错误码 $what/$extra）：请检查公益视频直链能否直接播放，或请家长切换为答题模式")
+                fail("No se puede reproducir el vídeo (código de error $what/$extra): comprueba que el enlace directo del vídeo educativo se pueda reproducir, o pide al padre que cambie al modo de preguntas")
                 true
             }
         }
         root.addView(video, LinearLayout.LayoutParams(-1,0,1f))
         val buttons = LinearLayout(this).apply { gravity=Gravity.CENTER }
-        complete = TvUi.button(this, "完成学习，领取使用时间", true) {
+        complete = TvUi.button(this, "Terminar estudio y reclamar tiempo de uso", true) {
             try { DeviceRuntime.learning.completeVideo(id);GateService.refreshNow();finish() }
             catch (e: Exception) { status.text = e.message }
         }.apply { isEnabled=false }
         buttons.addView(complete)
-        buttons.addView(TvUi.button(this, "返回") { finish() })
+        buttons.addView(TvUi.button(this, "Volver") { finish() })
         root.addView(buttons)
         setContentView(root)
         val videoUrl = intent.getStringExtra("url").orEmpty()
         if (LocalOnlyGuard.enabled && !LocalOnlyGuard.isLocalUrl(videoUrl)) {
-            fail("仅本地隐私版（EU Local-Only）仅允许播放本机或局域网内的公益视频")
+            fail("La versión de privacidad solo local (EU Local-Only) solo permite reproducir vídeos educativos de este equipo o de la red local")
         } else {
             video.setVideoPath(videoUrl)
         }
