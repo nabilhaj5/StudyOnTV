@@ -67,11 +67,11 @@ object EdgeTts {
         return try {
             synthesizeOnce(text, chosenVoice, rateStr, System.currentTimeMillis() + clockSkewMs)
         } catch (e: Handshake403Exception) {
-            val serverMs = e.serverMillis ?: throw IllegalStateException(e.message ?: "Edge 语音握手被拒绝（HTTP 403）")
+            val serverMs = e.serverMillis ?: throw IllegalStateException(e.message ?: "Handshake de voz de Edge rechazado (HTTP 403)")
             val delta = serverMs - System.currentTimeMillis()
             // 仅当设备时钟确实与微软服务端偏差超过 60 秒时才用服务端时间重试，否则快速失败，避免双倍等待（#165）
             if (kotlin.math.abs(delta - clockSkewMs) < 60_000L) {
-                throw IllegalStateException(e.message ?: "Edge 语音握手被拒绝（HTTP 403）")
+                throw IllegalStateException(e.message ?: "Handshake de voz de Edge rechazado (HTTP 403)")
             }
             clockSkewMs = delta
             synthesizeOnce(text, chosenVoice, rateStr, serverMs)
@@ -162,7 +162,7 @@ object EdgeTts {
                             val headerLen = ((data[0].toInt() and 0xFF) shl 8) or (data[1].toInt() and 0xFF)
                             val bodyStart = 2 + headerLen
                             if (bodyStart < data.size) {
-                                require(audio.size() + (data.size - bodyStart) <= MAX_AUDIO_BYTES) { "Edge 语音返回数据过大" }
+                                require(audio.size() + (data.size - bodyStart) <= MAX_AUDIO_BYTES) { "Los datos devueltos por la voz de Edge son demasiado grandes" }
                                 audio.write(data, bodyStart, data.size - bodyStart)
                             }
                         }
@@ -172,7 +172,7 @@ object EdgeTts {
             sendCloseFrame(out)
             val result = audio.toByteArray()
             require(result.isNotEmpty()) {
-                if (closeDetail.isNotEmpty()) "Edge 语音返回空音频（$closeDetail）" else "Edge 语音返回空音频"
+                if (closeDetail.isNotEmpty()) "La voz de Edge devolvió audio vacío ($closeDetail)" else "La voz de Edge devolvió audio vacío"
             }
             return result
         } finally {
@@ -234,23 +234,23 @@ object EdgeTts {
             if (colon > 0) headers[line.substring(0, colon).trim().lowercase(Locale.US)] = line.substring(colon + 1).trim()
         }
         if (statusLine.contains("403")) {
-            throw Handshake403Exception("Edge 语音握手失败：$statusLine", parseHttpDate(headers["date"]))
+            throw Handshake403Exception("Handshake de voz de Edge fallido: $statusLine", parseHttpDate(headers["date"]))
         }
-        require(statusLine.contains("101")) { "Edge 语音握手失败：$statusLine" }
+        require(statusLine.contains("101")) { "Handshake de voz de Edge fallido: $statusLine" }
     }
 
     private fun readHttpLine(input: BufferedInputStream): String {
         val buf = ByteArrayOutputStream()
         while (true) {
             val b = input.read()
-            if (b == -1) throw EOFException("Edge 语音连接意外关闭")
+            if (b == -1) throw EOFException("La conexión de voz de Edge se cerró inesperadamente")
             if (b == '\n'.code) {
                 val arr = buf.toByteArray()
                 val len = if (arr.isNotEmpty() && arr[arr.size - 1] == '\r'.code.toByte()) arr.size - 1 else arr.size
                 return String(arr, 0, len, Charsets.UTF_8)
             }
             buf.write(b)
-            require(buf.size() <= 8192) { "Edge 响应头过长" }
+            require(buf.size() <= 8192) { "La cabecera de respuesta de Edge es demasiado larga" }
         }
     }
 
@@ -277,14 +277,14 @@ object EdgeTts {
                 continue
             }
             if (frame.opcode != 0x0) {
-                require(fragOpcode == -1) { "Edge WebSocket 分片未结束又收到新消息帧" }
+                require(fragOpcode == -1) { "El WebSocket de Edge recibió un nuevo mensaje antes de terminar la fragmentación" }
                 if (frame.fin) return frame
                 fragOpcode = frame.opcode
                 fragBuffer.reset()
                 fragBuffer.write(frame.payload)
             } else {
-                require(fragOpcode != -1) { "Edge WebSocket 收到孤立的连续分片帧" }
-                require(fragBuffer.size() + frame.payload.size <= MAX_AUDIO_BYTES) { "Edge 帧过大" }
+                require(fragOpcode != -1) { "El WebSocket de Edge recibió un fragmento de continuación huérfano" }
+                require(fragBuffer.size() + frame.payload.size <= MAX_AUDIO_BYTES) { "El frame de Edge es demasiado grande" }
                 fragBuffer.write(frame.payload)
                 if (frame.fin) {
                     return Frame(true, fragOpcode, fragBuffer.toByteArray())
@@ -314,7 +314,7 @@ object EdgeTts {
             }
             len = v
         }
-        require(len in 0..MAX_AUDIO_BYTES) { "Edge 帧过大" }
+        require(len in 0..MAX_AUDIO_BYTES) { "El frame de Edge es demasiado grande" }
         val mask = if (masked) readExact(input, 4) else null
         val payload = readExact(input, len.toInt())
         if (mask != null) {
