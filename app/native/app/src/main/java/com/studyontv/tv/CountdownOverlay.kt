@@ -59,7 +59,7 @@ class CountdownOverlay(private val context: Context) {
         val chip = chip()
         // Skip setText when the minute value has not changed: re-assigning the same text every
         // second still triggers a layout pass, which shows up as visible jitter on low-end TVs.
-        val label = "剩余 ${(seconds + 59) / 60} 分钟"
+        val label = "Quedan ${(seconds + 59) / 60} minutos"
         if (label != lastText) { chip.text = label; lastText = label }
         paint(urgent)
         if (!attached) {
