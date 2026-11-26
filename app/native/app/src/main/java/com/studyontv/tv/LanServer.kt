@@ -141,7 +141,7 @@ class LanServer(
                 while (true) {
                     val line = readLine(input) ?: break
                     if (line.isEmpty()) break
-                    if (headers.size >= 100) return reply(c.getOutputStream(), 400, "text/plain", "Too many headers".toByteArray())
+                    if (headers.size >= 100) return reply(c.getOutputStream(), 400, "text/plain", "Demasiadas cabeceras".toByteArray())
                     val idx = line.indexOf(':')
                     if (idx > 0) headers[line.substring(0, idx).trim().lowercase(Locale.US)] = line.substring(idx + 1).trim()
                 }
@@ -152,8 +152,8 @@ class LanServer(
 
                 val contentLengthRaw = headers["content-length"]
                 val contentLength = if (contentLengthRaw == null) 0L else contentLengthRaw.toLongOrNull() ?: -1L
-                if (contentLength < 0L) return json(out, 400, err("bad_request").put("message", "Content-Length 格式错误"), origin)
-                if (contentLength > MAX_PARENT_BODY) return json(out, 413, err("payload_too_large").put("message", "请求内容过大"), origin)
+                if (contentLength < 0L) return json(out, 400, err("bad_request").put("message", "El formato de Content-Length no es correcto"), origin)
+                if (contentLength > MAX_PARENT_BODY) return json(out, 413, err("payload_too_large").put("message", "El contenido de la petición es demasiado grande"), origin)
 
                 val local = c.inetAddress?.isLoopbackAddress ?: false
                 val deviceAccess = local && headers["x-device-token"] == AdminAuth.deviceToken
@@ -170,7 +170,7 @@ class LanServer(
                     val integrationToken = token?.takeIf { it.startsWith("sotv_") }
                     integration = IntegrationAuth.verify(context, integrationToken)
                     if (integration != null && !deviceAccess && !parent && !IntegrationAuth.takeBudget()) {
-                        return json(out, 429, err("too_many_requests").put("message", "请求太频繁，请稍后再试"), origin)
+                        return json(out, 429, err("too_many_requests").put("message", "Demasiadas peticiones, inténtalo más tarde"), origin)
                     }
                     parent = AdminAuth.valid(token) || (adminKey != null && AdminAuth.verify(context, adminKey))
                     if (!deviceAccess && !parent && integration == null) {
@@ -186,7 +186,7 @@ class LanServer(
                     else -> MAX_INTEGRATION_BODY
                 }
                 if (contentLength > maxBody) {
-                    return json(out, 413, err("payload_too_large").put("message", "请求内容过大"), origin)
+                    return json(out, 413, err("payload_too_large").put("message", "El contenido de la petición es demasiado grande"), origin)
                 }
 
                 val body = if (contentLength > 0L) readBody(input, contentLength.toInt()) else ""
@@ -216,14 +216,14 @@ class LanServer(
                 java.net.URLDecoder.decode(kv[0], "UTF-8") to java.net.URLDecoder.decode(kv.getOrElse(1) { "" }, "UTF-8")
             }
         } catch (_: IllegalArgumentException) {
-            return json(out, 400, err("bad_request").put("message", "请求参数格式错误"), origin)
+            return json(out, 400, err("bad_request").put("message", "El formato de los parámetros de la petición no es correcto"), origin)
         }
 
         if (path == "/api/auth" && method == "POST") {
             val input = try { JSONObject(body) } catch (_: Exception) { JSONObject() }
             val remember = input.optBoolean("remember")
             val session = AdminAuth.login(context, input.optString("passphrase"), remember)
-            return if (session == null) json(out, 401, err("管理密码错误，连续错误 5 次后需等待一分钟"), origin)
+            return if (session == null) json(out, 401, err("Contraseña de administración incorrecta; tras 5 errores seguidos deberás esperar un minuto"), origin)
             else json(out, 200, JSONObject().put("token", session).put("expiresIn", if (remember) 30 * 86400 else 43200), origin)
         }
 
@@ -238,9 +238,9 @@ class LanServer(
                     path == "/api/analytics" && method == "GET" -> "read"
                     path == "/api/remote" && method == "POST" -> "control"
                     else -> null
-                } ?: return json(out, 403, err("forbidden").put("message", "这个接口需要家长登录"), origin)
+                } ?: return json(out, 403, err("forbidden").put("message", "Esta interfaz requiere iniciar sesión como padre"), origin)
                 if ((scope == "read" && !integration.read) || (scope == "control" && !integration.control)) {
-                    return json(out, 403, err("forbidden").put("message", "集成令牌没有这个权限"), origin)
+                    return json(out, 403, err("forbidden").put("message", "El token de integración no tiene este permiso"), origin)
                 }
             }
             if (deviceAccess && !parent && integration == null && !isDeviceRouteAllowed(method, path)) {
@@ -254,7 +254,7 @@ class LanServer(
             if (router.dispatch(ctx)) return
         } catch (e: Exception) {
             Diag.error("HTTP", "$method $path failed", e)
-            return json(out, 400, JSONObject().put("error", "bad_request").put("message", e.message ?: "请求格式错误"), origin)
+            return json(out, 400, JSONObject().put("error", "bad_request").put("message", e.message ?: "Formato de petición incorrecto"), origin)
         }
 
         if (method != "GET") return json(out, 405, err("method_not_allowed"), origin)
@@ -375,7 +375,7 @@ class LanServer(
             try {
                 json(ctx, 200, HolidayService.fetch(context, year))
             } catch (e: Exception) {
-                json(ctx, 200, err("holiday_failed").put("message", e.message ?: "节假日同步失败"))
+                json(ctx, 200, err("holiday_failed").put("message", e.message ?: "Error al sincronizar los días festivos"))
             }
         }
         router.put("/api/config") { ctx ->
@@ -389,7 +389,7 @@ class LanServer(
             try {
                 json(ctx, 200, GradingService.generateQuestions(store, input))
             } catch (e: Exception) {
-                json(ctx, 200, err("generate_failed").put("message", e.message ?: "生成失败，请稍后重试"))
+                json(ctx, 200, err("generate_failed").put("message", e.message ?: "Error al generar; inténtalo más tarde"))
             }
         }
         router.get("/api/questions") { ctx ->
@@ -415,7 +415,7 @@ class LanServer(
             val input = JSONObject(ctx.body)
             val ids = input.getJSONArray("ids")
             val enabled = input.optBoolean("enabled", false)
-            require(ids.length() in 1..50000) { "请选择题目" }
+            require(ids.length() in 1..50000) { "Selecciona preguntas" }
             val updated = DeviceRuntime.learning.setQuestionsEnabled((0 until ids.length()).map { ids.getString(it) }, enabled)
             GateService.refreshNow()
             json(ctx, 200, JSONObject().put("ok", true).put("updated", updated))
@@ -452,7 +452,7 @@ class LanServer(
         }
         router.post("/api/speech/test") { ctx ->
             val text = try { JSONObject(ctx.body.ifEmpty { "{}" }).optString("text").trim() } catch (_: Exception) { "" }
-            SpeechReader.read(context, text.ifBlank { "今天天气不错" }.take(200))
+            SpeechReader.read(context, text.ifBlank { "Hoy hace buen tiempo" }.take(200))
             val started = System.currentTimeMillis()
             while (System.currentTimeMillis() - started < 800 && SpeechReader.status().optString("reason") == "idle") Thread.sleep(50)
             json(ctx, 200, SpeechReader.status())
@@ -478,20 +478,20 @@ class LanServer(
         }
         router.delete("/api/questions/bank") { ctx ->
             val input = JSONObject(ctx.body)
-            require(input.optBoolean("confirm")) { "请确认删除题库" }
+            require(input.optBoolean("confirm")) { "Confirma la eliminación del banco" }
             val deleted = DeviceRuntime.learning.clearQuestions(input.getString("bank"))
             GateService.refreshNow()
             json(ctx, 200, JSONObject().put("deleted", deleted))
         }
         router.post("/api/questions/clear") { ctx ->
-            require(JSONObject(ctx.body).optBoolean("confirm")) { "请确认清空全部题库" }
+            require(JSONObject(ctx.body).optBoolean("confirm")) { "Confirma el borrado de todo el banco de preguntas" }
             val deleted = DeviceRuntime.learning.clearQuestions()
             GateService.refreshNow()
             json(ctx, 200, JSONObject().put("deleted", deleted))
         }
         router.post("/api/questions/delete") { ctx ->
             val ids = JSONObject(ctx.body).getJSONArray("ids")
-            require(ids.length() in 1..50000) { "请选择要删除的题目" }
+            require(ids.length() in 1..50000) { "Selecciona las preguntas que quieres eliminar" }
             val deleted = DeviceRuntime.learning.deleteQuestions((0 until ids.length()).map { ids.getString(it) })
             GateService.refreshNow()
             json(ctx, 200, JSONObject().put("ok", true).put("deleted", deleted))
@@ -522,7 +522,7 @@ class LanServer(
         router.post("/api/password") { ctx ->
             val input = JSONObject(ctx.body)
             if (!AdminAuth.verify(context, input.optString("current"))) {
-                return@post json(ctx, 403, err("wrong_password").put("message", "当前密码不正确，连续错误 5 次后需等待一分钟"))
+                return@post json(ctx, 403, err("wrong_password").put("message", "La contraseña actual no es correcta; tras 5 errores seguidos deberás esperar un minuto"))
             }
             AdminAuth.setPassword(context, input.optString("password"))
             val newToken = AdminAuth.issueSession(remember = false, context = context)
@@ -535,11 +535,11 @@ class LanServer(
         router.post("/api/remote") { ctx ->
             val parent = ctx.parent
             val control = ctx.integration?.control == true
-            if (!parent && !control) return@post json(ctx, 403, err("forbidden").put("message", "请先用管理密码登录"))
+            if (!parent && !control) return@post json(ctx, 403, err("forbidden").put("message", "Inicia sesión primero con la contraseña de administración"))
             val input = JSONObject(ctx.body.ifEmpty { "{}" })
             if (input.optString("action") == "credit") {
                 val value = input.getDouble("minutes")
-                require(value.isFinite() && value == value.toInt().toDouble()) { "调整时长需要整数分钟" }
+                require(value.isFinite() && value == value.toInt().toDouble()) { "El ajuste de tiempo debe ser en minutos enteros" }
             }
             val status = DeviceRuntime.learning.remote(input.optString("action"), input.optInt("minutes"), if (parent) "panel" else "integration")
             GateService.refreshNow()
@@ -550,7 +550,7 @@ class LanServer(
             val input = JSONObject(ctx.body.ifEmpty { "{}" })
             val read = input.optBoolean("read", true)
             val control = input.optBoolean("control", false)
-            if (!read && !control) return@post json(ctx, 200, err("bad_scope").put("message", "至少选择只读或控制中的一种权限"))
+            if (!read && !control) return@post json(ctx, 200, err("bad_scope").put("message", "Selecciona al menos un permiso: solo lectura o control"))
             val token = IntegrationAuth.issue(context, read, control)
             json(ctx, 200, JSONObject().put("token", token).put("integration", IntegrationAuth.state(context)))
         }
@@ -595,7 +595,7 @@ class LanServer(
             if (input.has("consent")) Prefs.setCrashUploadConsent(context, input.optBoolean("consent"))
             if (input.has("endpoint")) {
                 val endpoint = input.optString("endpoint").trim()
-                require(endpoint.isEmpty() || endpoint.startsWith("https://") || endpoint.startsWith("http://")) { "上传地址需要以 http:// 或 https:// 开头" }
+                require(endpoint.isEmpty() || endpoint.startsWith("https://") || endpoint.startsWith("http://")) { "La dirección de subida debe empezar por http:// o https://" }
                 Prefs.setCrashEndpoint(context, endpoint)
             }
             if (input.has("token")) Prefs.setCrashToken(context, input.optString("token").trim())
@@ -628,7 +628,7 @@ class LanServer(
             try {
                 json(ctx, 200, DesktopMode.setEnabled(context, enabled))
             } catch (e: Exception) {
-                json(ctx, 500, err(e.message ?: "切换电视桌面失败"))
+                json(ctx, 500, err(e.message ?: "Error al cambiar el escritorio del televisor"))
             }
         }
         router.post("/api/device/desktop/choose") { ctx ->
@@ -641,7 +641,7 @@ class LanServer(
         }
         router.put("/api/device") { ctx ->
             val name = JSONObject(ctx.body).optString("name").trim()
-            require(name.length in 1..32) { "设备名称需要 1–32 个字" }
+            require(name.length in 1..32) { "El nombre del dispositivo debe tener entre 1 y 32 caracteres" }
             Prefs.setDeviceName(context, name)
             json(ctx, 200, JSONObject().put("ok", true).put("name", name))
         }
@@ -664,7 +664,7 @@ class LanServer(
         router.prefixPost("/api/reviews/") { ctx ->
             val id = ctx.path.removePrefix("/api/reviews/").substringBefore('/')
             if (ctx.path.endsWith("/retry")) {
-                require(store.review(id) != null) { "题目不存在" }
+                require(store.review(id) != null) { "La pregunta no existe" }
                 GradingService.enqueue(store, DeviceRuntime.learning, id)
                 return@prefixPost json(ctx, 200, JSONObject().put("ok", true))
             }
