@@ -18,16 +18,16 @@ object GradingService {
     fun providers(): JSONArray = JSONArray().apply {
         fun p(id: String, name: String, base: String, model: String, vision: String = "", note: String = "", keyUrl: String = "") = put(JSONObject()
             .put("id", id).put("name", name).put("baseUrl", base).put("model", model).put("visionModel", vision).put("note", note).put("keyUrl", keyUrl))
-        p("deepseek", "DeepSeek", "https://api.deepseek.com/v1", "deepseek-flash", "deepseek-flash", "性价比高，支持文字与手写图片（开启“模型支持图像”）", "https://platform.deepseek.com/api_keys")
-        p("dashscope", "阿里云百炼（通义千问）", "https://dashscope.aliyuncs.com/compatible-mode/v1", "qwen3.8-flash", "qwen3.8-flash", "", "https://bailian.console.aliyun.com/?apiKey=1")
-        p("zhipu", "智谱 GLM", "https://open.bigmodel.cn/api/paas/v4", "glm-4.7-flash", "glm-4.6v-flash", "有免费模型", "https://open.bigmodel.cn/usercenter/apikeys")
-        p("moonshot", "月之暗面 Kimi", "https://api.moonshot.cn/v1", "kimi-k3.1-pro", "kimi-k3.1-pro", "", "https://platform.moonshot.cn/console/api-keys")
-        p("siliconflow", "硅基流动", "https://api.siliconflow.cn/v1", "Qwen/Qwen3-8B", "Qwen/Qwen3-VL-8B-Instruct", "", "https://cloud.siliconflow.cn/account/ak")
-        p("volcengine", "火山方舟（豆包）", "https://ark.cn-beijing.volces.com/api/v3", "doubao-seed-2-1-lite-260915", "doubao-seed-2-1-lite-260915", "模型名填写模型 ID（如 doubao-seed-2-1-lite-260915）；也兼容推理接入点 ID", "https://console.volcengine.com/ark")
+        p("deepseek", "DeepSeek", "https://api.deepseek.com/v1", "deepseek-flash", "deepseek-flash", "Buena relación calidad-precio; admite texto e imágenes manuscritas (activa «El modelo admite imágenes»)", "https://platform.deepseek.com/api_keys")
+        p("dashscope", "Alibaba Cloud Bailian (Qwen)", "https://dashscope.aliyuncs.com/compatible-mode/v1", "qwen3.8-flash", "qwen3.8-flash", "", "https://bailian.console.aliyun.com/?apiKey=1")
+        p("zhipu", "Zhipu GLM", "https://open.bigmodel.cn/api/paas/v4", "glm-4.7-flash", "glm-4.6v-flash", "Tiene modelos gratuitos", "https://open.bigmodel.cn/usercenter/apikeys")
+        p("moonshot", "Moonshot Kimi", "https://api.moonshot.cn/v1", "kimi-k3.1-pro", "kimi-k3.1-pro", "", "https://platform.moonshot.cn/console/api-keys")
+        p("siliconflow", "SiliconFlow", "https://api.siliconflow.cn/v1", "Qwen/Qwen3-8B", "Qwen/Qwen3-VL-8B-Instruct", "", "https://cloud.siliconflow.cn/account/ak")
+        p("volcengine", "Volcengine Ark (Doubao)", "https://ark.cn-beijing.volces.com/api/v3", "doubao-seed-2-1-lite-260915", "doubao-seed-2-1-lite-260915", "En «modelo» pon el ID del modelo (p. ej. doubao-seed-2-1-lite-260915); también admite el ID del endpoint de inferencia", "https://console.volcengine.com/ark")
         p("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", "openai/gpt-6-luna", "openai/gpt-6-luna", "", "https://openrouter.ai/keys")
         p("openai", "OpenAI", "https://api.openai.com/v1", "gpt-6-luna", "gpt-6-luna", "", "https://platform.openai.com/api-keys")
-        p("ollama", "本地 Ollama / LM Studio", "http://192.168.1.10:11434/v1", "qwen3:8b", "qwen3-vl:8b", "局域网内的电脑，地址改成那台电脑的 IP；无需 API Key")
-        p("custom", "自定义（OpenAI 兼容）", "", "", "")
+        p("ollama", "Ollama / LM Studio local", "http://192.168.1.10:11434/v1", "qwen3:8b", "qwen3-vl:8b", "Ordenador en la red local; cambia la dirección por la IP de ese ordenador; no requiere API Key")
+        p("custom", "Personalizado (compatible con OpenAI)", "", "", "")
     }
 
     fun settings(store: LocalStore, includeKey: Boolean = false): JSONObject {
@@ -43,9 +43,9 @@ object GradingService {
 
     /** 允许 http 只限局域网 / 本机（本地模型），公网必须 https，避免 API Key 明文经过互联网 */
     private fun checkEndpoint(raw: String): URL {
-        val url = try { URL(raw.trim()) } catch (_: Exception) { throw IllegalArgumentException("请填写完整的接口地址，例如 https://api.deepseek.com/v1") }
-        require(url.userInfo == null && url.ref == null && url.host.isNotEmpty()) { "接口地址格式不正确" }
-        require(url.protocol == "https" || (url.protocol == "http" && privateHost(url.host))) { "公网接口需要使用 HTTPS；http 只允许局域网地址（如本地 Ollama）" }
+        val url = try { URL(raw.trim()) } catch (_: Exception) { throw IllegalArgumentException("Escribe la dirección completa de la interfaz, por ejemplo https://api.deepseek.com/v1") }
+        require(url.userInfo == null && url.ref == null && url.host.isNotEmpty()) { "El formato de la dirección de la interfaz no es correcto" }
+        require(url.protocol == "https" || (url.protocol == "http" && privateHost(url.host))) { "Las interfaces públicas deben usar HTTPS; http solo se permite en direcciones de red local (p. ej. Ollama local)" }
         return url
     }
 
@@ -65,14 +65,14 @@ object GradingService {
         for (key in listOf("mode", "provider", "endpoint", "model", "vision", "passScore", "temperature")) if (input.has(key)) next.put(key, input.get(key))
         if (input.optString("apiKey").isNotBlank()) next.put("apiKey", input.getString("apiKey").trim())
         if (input.optBoolean("clearKey")) next.remove("apiKey")
-        require(next.getString("mode") in listOf("manual", "ai")) { "请选择家长批改或 AI 批改" }
+        require(next.getString("mode") in listOf("manual", "ai")) { "Elige corrección por el padre o corrección por IA" }
         next.put("endpoint", next.getString("endpoint").trim())
         if (next.getString("mode") == "ai") {
             checkEndpoint(next.getString("endpoint"))
-            require(next.optString("model").isNotBlank()) { "请填写模型名称" }
-            require(next.optString("apiKey").isNotEmpty() || privateHost(URL(next.getString("endpoint")).host)) { "请填写 API Key" }
+            require(next.optString("model").isNotBlank()) { "Escribe el nombre del modelo" }
+            require(next.optString("apiKey").isNotEmpty() || privateHost(URL(next.getString("endpoint")).host)) { "Escribe la API Key" }
         }
-        require(next.getDouble("passScore").isFinite() && next.getDouble("passScore") in 1.0..100.0) { "及格分需要为 1–100" }
+        require(next.getDouble("passScore").isFinite() && next.getDouble("passScore") in 1.0..100.0) { "La nota de aprobado debe estar entre 1 y 100" }
         next.put("temperature", validateTemperature(next.optDouble("temperature", 0.0)))
         next.remove("hasKey"); next.remove("chatUrl"); next.remove("providers"); next.remove("clearKey")
         store.set("grading_settings", next.toString())
@@ -91,7 +91,7 @@ object GradingService {
     private class ApiError(message: String) : Exception(message)
 
     internal fun validateTemperature(value: Double): Double {
-        require(value.isFinite() && value in 0.0..2.0) { "温度需要在 0–2 之间" }
+        require(value.isFinite() && value in 0.0..2.0) { "La temperatura debe estar entre 0 y 2" }
         return value
     }
 
@@ -133,7 +133,7 @@ object GradingService {
         val host = hostOf(url)
         val method = if (body == null) "GET" else "POST"
         fun elapsed() = System.currentTimeMillis() - started
-        LocalOnlyGuard.requireLocalUrl(url, "AI 服务（如局域网 Ollama）")
+        LocalOnlyGuard.requireLocalUrl(url, "servicio de IA (p. ej. Ollama en red local)")
         val connection = URL(url).openConnection() as HttpURLConnection
         var responded = false
         try {
@@ -154,7 +154,7 @@ object GradingService {
                 while (input.read(buf).also { n = it } >= 0) {
                     if (out.size() + n > 2_000_000) {
                         Diag.warn("AI", "$method $host response too large bytes>${out.size()} elapsed=${elapsed()}ms")
-                        throw ApiError("响应过大")
+                        throw ApiError("La respuesta es demasiado grande")
                     }
                     out.write(buf, 0, n)
                 }
@@ -169,26 +169,26 @@ object GradingService {
             Diag.info("AI", "$method $host http=$code elapsed=${elapsed()}ms bytes=${bytes.size}")
             return try { JSONObject(text) } catch (_: Exception) {
                 Diag.warn("AI", "$method $host not-json elapsed=${elapsed()}ms")
-                throw ApiError("返回内容不是 JSON，请确认地址是 OpenAI 兼容接口")
+                throw ApiError("El contenido devuelto no es JSON; comprueba que la dirección sea una interfaz compatible con OpenAI")
             }
         } catch (e: ApiError) {
             throw e
         } catch (e: java.net.UnknownHostException) {
             Diag.warn("AI", "$method $host failed=${e.javaClass.simpleName} elapsed=${elapsed()}ms")
-            throw ApiError("无法解析域名，请检查网络或地址")
+            throw ApiError("No se puede resolver el dominio; comprueba la red o la dirección")
         } catch (e: java.net.SocketTimeoutException) {
             val connectStage = !responded && e.message.orEmpty().contains("connect", ignoreCase = true)
             Diag.warn("AI", "$method $host failed=${e.javaClass.simpleName} stage=${if (connectStage) "connect" else "read"} elapsed=${elapsed()}ms timeout=${timeout}ms")
             throw ApiError(if (connectStage)
-                "连接 $host 超时（20 秒），电视可能访问不到这个地址。请确认电视能上网，或用手机热点对比一次"
+                "Se agotó el tiempo al conectar con $host (20 s); puede que el televisor no pueda acceder a esa dirección. Comprueba que el televisor tenga internet o compara con un punto de acceso móvil"
             else
-                "已连上 $host，但 ${timeout / 1000} 秒内没有返回内容，模型可能过慢或服务限流")
+                "Conectado a $host, pero no hubo respuesta en ${timeout / 1000} s; el modelo puede ser demasiado lento o el servicio estar limitando peticiones")
         } catch (e: java.net.ConnectException) {
             Diag.warn("AI", "$method $host failed=${e.javaClass.simpleName} elapsed=${elapsed()}ms detail=${e.message.orEmpty().take(120)}")
-            throw ApiError("无法连接 $host（${e.message?.take(60)}）")
+            throw ApiError("No se puede conectar con $host (${e.message?.take(60)})")
         } catch (e: javax.net.ssl.SSLException) {
             Diag.warn("AI", "$method $host failed=${e.javaClass.simpleName} elapsed=${elapsed()}ms detail=${e.message.orEmpty().take(120)}")
-            throw ApiError("HTTPS 握手失败，设备系统可能太旧：${e.message?.take(60)}")
+            throw ApiError("Error en el handshake HTTPS; puede que el sistema del dispositivo sea demasiado antiguo: ${e.message?.take(60)}")
         } catch (e: java.io.IOException) {
             Diag.warn("AI", "$method $host failed=${e.javaClass.simpleName} elapsed=${elapsed()}ms detail=${e.message.orEmpty().take(160)}")
             throw e
@@ -200,18 +200,18 @@ object GradingService {
         val lower = detail.lowercase(java.util.Locale.US)
         return when {
             code == 402 || lower.contains("insufficient balance") || lower.contains("insufficient_quota") || lower.contains("exceeded your current quota") ->
-                "账户余额不足，请先到服务商平台充值后再试"
+                "Saldo insuficiente en la cuenta; recarga en la plataforma del proveedor y vuelve a intentarlo"
             code == 401 || code == 403 || lower.contains("invalid_api_key") || lower.contains("incorrect api key") || lower.contains("authentication fails") ->
-                "API Key 无效或没有权限，请检查密钥是否填写正确"
+                "API Key no válida o sin permisos; comprueba que la clave esté bien escrita"
             code == 404 || lower.contains("model_not_found") || lower.contains("does not exist") ->
-                "接口地址或模型名称不存在（HTTP $code），请检查接口地址（如 /v1）与模型名称"
+                "La dirección de la interfaz o el nombre del modelo no existen (HTTP $code); revisa la dirección (p. ej. /v1) y el nombre del modelo"
             code == 429 || lower.contains("rate limit") || lower.contains("too many requests") ->
-                "请求过于频繁或触发限流，请稍后再试"
+                "Demasiadas peticiones o límite de frecuencia alcanzado; inténtalo más tarde"
             lower.contains("context length") || lower.contains("maximum context") || (lower.contains("token") && lower.contains("limit")) ->
-                "输入内容过长，超出模型单次处理上限，请精简后再试"
+                "El contenido de entrada es demasiado largo y supera el límite del modelo; acórtalo e inténtalo de nuevo"
             code in listOf(500, 502, 503, 504) || lower.contains("overloaded") || lower.contains("service unavailable") ->
-                "AI 服务暂时繁忙（HTTP $code），请稍后再试"
-            else -> "服务返回错误（HTTP $code）" + if (detail.isNotEmpty()) "：${detail.take(120)}" else ""
+                "El servicio de IA está temporalmente ocupado (HTTP $code); inténtalo más tarde"
+            else -> "El servicio devolvió un error (HTTP $code)" + if (detail.isNotEmpty()) ": ${detail.take(120)}" else ""
         }
     }
 
@@ -235,11 +235,11 @@ object GradingService {
                 Diag.info("AI", "chat ${hostOf(url)} retry#$attempt $fallback model=$model")
             }
         }
-        val response = envelope ?: throw ApiError("模型没有返回结果")
+        val response = envelope ?: throw ApiError("El modelo no devolvió ningún resultado")
         val content = response.optJSONArray("choices")?.optJSONObject(0)?.optJSONObject("message")?.optString("content")?.trim()
         if (content == null) {
             Diag.warn("AI", "chat ${hostOf(url)} bad-envelope model=$model elapsed=${System.currentTimeMillis() - started}ms")
-            throw ApiError("返回格式不是 chat/completions")
+            throw ApiError("El formato devuelto no es chat/completions")
         }
         Diag.info("AI", "chat ok model=$model elapsed=${System.currentTimeMillis() - started}ms chars=${content.length} retried=${attempt > 0}")
         return content
@@ -247,7 +247,7 @@ object GradingService {
 
     private fun extractJson(text: String): JSONObject {
         val start = text.indexOf('{'); val end = text.lastIndexOf('}')
-        if (start < 0 || end <= start) throw ApiError("模型没有按要求返回 JSON：" + text.take(80))
+        if (start < 0 || end <= start) throw ApiError("El modelo no devolvió JSON como se pedía: " + text.take(80))
         return JSONObject(text.substring(start, end + 1))
     }
 
@@ -255,17 +255,17 @@ object GradingService {
         val started = System.currentTimeMillis()
         return try {
             val config = draft(store, input)
-            require(config.optString("model").isNotBlank()) { "请先填写模型名称" }
+            require(config.optString("model").isNotBlank()) { "Escribe primero el nombre del modelo" }
             val messages = JSONArray()
                 .put(JSONObject().put("role", "system").put("content", "只返回 JSON：{\"score\":数字,\"feedback\":\"中文\"}"))
                 .put(JSONObject().put("role", "user").put("content", "题目：1+1=？ 参考答案：2。学生答案：2。请评分。"))
             val reply = extractJson(chat(config, messages, 200))
             Diag.info("AI", "grading/test ok host=${hostOf(chatUrl(config.optString("endpoint")))} model=${config.optString("model")} elapsed=${System.currentTimeMillis() - started}ms")
             JSONObject().put("ok", true).put("ms", System.currentTimeMillis() - started)
-                .put("message", "连接成功，模型可以按要求批改（示例得分 ${reply.opt("score")}）")
+                .put("message", "Conexión correcta; el modelo puede corregir como se pide (puntuación de ejemplo ${reply.opt("score")})")
         } catch (e: Exception) {
             Diag.warn("AI", "grading/test failed=${e.javaClass.simpleName} elapsed=${System.currentTimeMillis() - started}ms detail=${(e.message ?: "").take(160)}")
-            JSONObject().put("ok", false).put("ms", System.currentTimeMillis() - started).put("message", e.message ?: "测试失败")
+            JSONObject().put("ok", false).put("ms", System.currentTimeMillis() - started).put("message", e.message ?: "Error en la prueba")
         }
     }
 
@@ -285,7 +285,7 @@ object GradingService {
         JSONObject().put("ok", true).put("items", ids)
     } catch (e: Exception) {
         Diag.warn("AI", "grading/models failed=${e.javaClass.simpleName} detail=${(e.message ?: "").take(160)}")
-        JSONObject().put("ok", false).put("items", JSONArray()).put("message", e.message ?: "获取失败，可以直接手动填写模型名称")
+        JSONObject().put("ok", false).put("items", JSONArray()).put("message", e.message ?: "Error al obtener la lista; puedes escribir el nombre del modelo a mano")
     }
 
     /**
@@ -293,7 +293,7 @@ object GradingService {
      */
     fun generateQuestions(store: LocalStore, input: JSONObject): JSONObject {
         val config = settings(store, true)
-        require(config.optString("endpoint").isNotBlank() && config.optString("model").isNotBlank()) { "请先在设置里配置 AI 批改服务" }
+        require(config.optString("endpoint").isNotBlank() && config.optString("model").isNotBlank()) { "Configura primero el servicio de corrección por IA en los ajustes" }
 
         val fromWrongBook = input.optBoolean("fromWrongBook", false)
         val subject = input.optString("subject").trim().take(32)
@@ -312,14 +312,14 @@ object GradingService {
 
         var topic = input.optString("topic").trim().take(200)
         if (topic.isEmpty() && weakSamples.isNotEmpty()) {
-            val inferredSubjects = weakSamples.mapNotNull { it.optString("subject").trim().takeIf { s -> s.isNotEmpty() } }.distinct().joinToString("、")
-            val sampleStems = weakSamples.take(3).mapNotNull { it.optString("q").trim().takeIf { q -> q.isNotEmpty() }?.take(36) }.joinToString("；")
-            topic = (if (inferredSubjects.isNotEmpty()) "$inferredSubjects 薄弱考点变式巩固（参考：$sampleStems）" else "薄弱错题同考点变式巩固：$sampleStems").take(200)
+            val inferredSubjects = weakSamples.mapNotNull { it.optString("subject").trim().takeIf { s -> s.isNotEmpty() } }.distinct().joinToString(", ")
+            val sampleStems = weakSamples.take(3).mapNotNull { it.optString("q").trim().takeIf { q -> q.isNotEmpty() }?.take(36) }.joinToString("; ")
+            topic = (if (inferredSubjects.isNotEmpty()) "Refuerzo de variantes de puntos débiles en $inferredSubjects (ref.: $sampleStems)" else "Refuerzo de variantes del mismo punto de las preguntas falladas: $sampleStems").take(200)
         }
         if (fromWrongBook && weakSamples.isEmpty() && topic.isEmpty()) {
-            throw IllegalArgumentException("当前还没有错题记录，请先让孩子答题或手动填写出题范围")
+            throw IllegalArgumentException("Todavía no hay preguntas falladas; haz que el niño responda algunas o escribe el ámbito de las preguntas a mano")
         }
-        require(topic.isNotEmpty()) { "请填写出题范围" }
+        require(topic.isNotEmpty()) { "Escribe el ámbito de las preguntas" }
 
         val count = input.optInt("count", 5).coerceIn(1, 20)
         val allowed = listOf("single", "multiple", "boolean", "text", "subjective")
@@ -329,7 +329,7 @@ object GradingService {
         val difficulty = input.optString("difficulty", "mixed")
         val extra = input.optString("extra").trim().take(300)
         val withTip = if (weakSamples.isNotEmpty()) true else input.optBoolean("withTip", true)
-        val labels = mapOf("single" to "单选", "multiple" to "多选", "boolean" to "判断", "text" to "填空", "subjective" to "主观题")
+        val labels = mapOf("single" to "opción única", "multiple" to "opción múltiple", "boolean" to "verdadero/falso", "text" to "rellenar huecos", "subjective" to "respuesta abierta")
         val system = """你是认真出题的中小学老师。只返回 JSON，不要 Markdown 代码块，不要解释。
 格式：{\"items\":[{\"type\":\"single\",\"q\":\"题干\",\"a\":[\"选项\",\"选项\"],\"k\":1,\"difficulty\":2,\"tip\":\"解析\"}]}
 type 只能是：single（单选，答案用 k 表示正确选项下标）、multiple（多选，用 correctIndices 数组）、boolean（判断，a 固定为 [\"正确\",\"错误\"]，k 为 0 或 1）、text（填空，用 answers 数组给出可接受答案）、subjective（主观题，用 modelAnswer 和 rubric）。
@@ -348,15 +348,15 @@ type 只能是：single（单选，答案用 k 表示正确选项下标）、mul
             }
         }
 
-        val difficultyDesc = if (difficulty == "mixed") "由易到难混合" else "$difficulty 星"
+        val difficultyDesc = if (difficulty == "mixed") "mezcla de fácil a difícil" else "$difficulty estrellas"
         val scopeHint = listOfNotNull(
-            subject.takeIf { it.isNotEmpty() }?.let { "科目：$it" },
-            level.takeIf { it.isNotEmpty() }?.let { "年级：$it" }
-        ).joinToString("，")
+            subject.takeIf { it.isNotEmpty() }?.let { "Asignatura: $it" },
+            level.takeIf { it.isNotEmpty() }?.let { "Curso: $it" }
+        ).joinToString(", ")
 
         val userContent = "请出 $count 道题，范围：$topic。" +
             (if (scopeHint.isNotEmpty()) "$scopeHint。" else "") +
-            "题型：${asked.joinToString("、") { labels[it] ?: it }}。难度：$difficultyDesc。" +
+            "题型：${asked.joinToString(", ") { labels[it] ?: it }}。难度：$difficultyDesc。" +
             (if (extra.isNotEmpty()) "额外要求：$extra。" else "") +
             (if (!withTip) "不需要写解析。" else "每题附清晰易懂的解析。") +
             weakPrompt +
@@ -370,7 +370,7 @@ type 只能是：single（单选，答案用 k 表示正确选项下标）、mul
             Diag.warn("AI", "questions/generate failed=${e.javaClass.simpleName} count=$count elapsed=${System.currentTimeMillis() - started}ms detail=${(e.message ?: "").take(160)}")
             throw e
         }
-        val raw = reply.optJSONArray("items") ?: throw IllegalArgumentException("模型没有返回题目列表，请重试")
+        val raw = reply.optJSONArray("items") ?: throw IllegalArgumentException("El modelo no devolvió la lista de preguntas; inténtalo de nuevo")
         val existing = HashSet<String>()
         for (stem in store.allStems()) {
             existing.add(stem.replace(Regex("\\s+"), ""))
@@ -427,7 +427,7 @@ type 只能是：single（单选，答案用 k 表示正确选项下标）、mul
         }
         if (items.length() == 0) {
             Diag.warn("AI", "questions/generate empty count=$count raw=${raw.length()} duplicate=$duplicate elapsed=${System.currentTimeMillis() - started}ms")
-            throw IllegalArgumentException(if (duplicate > 0) "生成的题目都和题库里已有的重复，请换个范围或关闭跳过重复" else "模型返回的题目格式不完整，请重试")
+            throw IllegalArgumentException(if (duplicate > 0) "Las preguntas generadas coinciden con otras que ya están en el banco; cambia el ámbito o desactiva «omitir duplicadas»" else "El formato de las preguntas devueltas por el modelo está incompleto; inténtalo de nuevo")
         }
         Diag.info("AI", "questions/generate ok count=$count items=${items.length()} duplicate=$duplicate weak=${weakSamples.size} model=${config.optString("model")} elapsed=${System.currentTimeMillis() - started}ms")
         return JSONObject().put("items", items).put("duplicates", duplicate)
@@ -476,12 +476,12 @@ type 只能是：single（单选，答案用 k 表示正确选项下标）、mul
                 // 本地存的是 /api/media/<sha256>.png，发给公网多模态大模型前必须还原成 Data URL
                 val drawingDataUrl = if (rawDrawing.isEmpty()) "" else MediaStore.toDataUrl(store.mediaDir, rawDrawing)
                 if (rawDrawing.isNotEmpty() && drawingDataUrl.isEmpty()) {
-                    review.put("feedback", "手写图片文件缺失，请由家长批改")
+                    review.put("feedback", "Falta el archivo de la imagen manuscrita; que la corrija el padre")
                     store.noteReview(review)
                     return@execute
                 }
                 if (drawingDataUrl.isNotEmpty() && !config.optBoolean("vision")) {
-                    review.put("feedback", "手写答案需要图像模型，请由家长批改或配置支持图像的模型")
+                    review.put("feedback", "La respuesta manuscrita requiere un modelo de imagen; que la corrija el padre o configura un modelo que admita imágenes")
                     store.noteReview(review)
                     return@execute
                 }
@@ -502,7 +502,7 @@ type 只能是：single（单选，答案用 k 表示正确选项下标）、mul
                 Diag.error("AI", "grading review=$id failed", e)
                 val review = store.review(id)
                 if (review != null && review.optString("state") == "pending") {
-                    review.put("feedback", "AI 暂未完成批改（" + (e.message ?: "未知错误").take(120) + "），答案已保留，可重试或由家长批改")
+                    review.put("feedback", "La IA no ha completado la corrección (" + (e.message ?: "error desconocido").take(120) + "); la respuesta se ha guardado, puedes reintentarlo o que la corrija el padre")
                     store.noteReview(review)
                 }
             } finally { synchronized(this) { running.remove(id) } }
