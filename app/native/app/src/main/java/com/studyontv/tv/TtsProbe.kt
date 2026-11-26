@@ -84,19 +84,19 @@ object TtsProbe {
                     try {
                         if (status != TextToSpeech.SUCCESS || engineRef == null) {
                             finish(STATUS_INIT_FAILED, false,
-                                "系统语音引擎没启动起来（status=$status）。到电视的 设置 → 无障碍 → 文字转语音 里检查一下引擎，或改用 DeepSeek 语音")
+                                "El motor de voz del sistema no se ha iniciado (status=$status). Ve a Ajustes → Accesibilidad → Texto a voz del televisor y revisa el motor, o usa la voz de DeepSeek")
                         } else {
                             val langStatus = try { engineRef.setLanguage(Locale.forLanguageTag(tag)) }
                             catch (_: Exception) { STATUS_INIT_FAILED }
                             when {
                                 langStatus >= TextToSpeech.LANG_AVAILABLE -> finish(langStatus, true,
-                                    if (engine.isEmpty()) "本地语音可用" else "本地语音可用（$engine）")
+                                    if (engine.isEmpty()) "La voz local está disponible" else "La voz local está disponible ($engine)")
                                 langStatus == TextToSpeech.LANG_MISSING_DATA -> finish(langStatus, false,
-                                    "引擎已安装（$engine），但缺少 $tag 语言包。可以点「去安装语言包」，或改用 DeepSeek 语音")
+                                    "El motor está instalado ($engine), pero falta el paquete de idioma $tag. Puedes pulsar «Instalar paquete de idioma» o usar la voz de DeepSeek")
                                 langStatus == TextToSpeech.LANG_NOT_SUPPORTED -> finish(langStatus, false,
-                                    "引擎（$engine）不支持 $tag。可以换一个语音引擎，或改用 DeepSeek 语音")
+                                    "El motor ($engine) no admite $tag. Puedes cambiar de motor de voz o usar la voz de DeepSeek")
                                 else -> finish(langStatus, false,
-                                    "本地语音不可用（langStatus=$langStatus），可以改用 DeepSeek 语音")
+                                    "La voz local no está disponible (langStatus=$langStatus); puedes usar la voz de DeepSeek")
                             }
                         }
                     } finally {
@@ -107,11 +107,11 @@ object TtsProbe {
             } catch (e: Exception) {
                 Diag.warn("Speech", "tts probe create failed ${e.javaClass.simpleName}: ${e.message.orEmpty().take(80)}")
                 try { tts?.shutdown() } catch (_: Exception) { }
-                finish(STATUS_INIT_FAILED, false, "这台设备没有可用的系统语音引擎，可以改用 DeepSeek 语音")
+                finish(STATUS_INIT_FAILED, false, "Este dispositivo no tiene un motor de voz del sistema disponible; puedes usar la voz de DeepSeek")
             }
         }
         val done = try { latch.await(timeoutMs, TimeUnit.MILLISECONDS) } catch (_: InterruptedException) { false }
-        if (!done) finish(STATUS_INIT_FAILED, false, "检测超时：语音引擎没有响应，可以改用 DeepSeek 语音")
+        if (!done) finish(STATUS_INIT_FAILED, false, "Tiempo de detección agotado: el motor de voz no responde; puedes usar la voz de DeepSeek")
         Diag.info("Speech", "tts probe engine=${result.optString("engine")} lang=$tag ok=${result.optBoolean("ok")} status=${result.optInt("langStatus")} timeout=${!done}")
         return result
     }
