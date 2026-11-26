@@ -9,29 +9,29 @@ import java.security.MessageDigest
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** 单线程串行同步，先验证完整批次再提交，失败保留本地题库。 */
+/** Sincronización serial en un solo hilo, primero valida el lote completo y luego confirma; si falla, conserva el banco local. */
 object BankAutomation {
     private val worker = Executors.newSingleThreadExecutor()
     private val running = AtomicBoolean(false)
     private var checkedAt = 0L
     private fun hash(value: String) = MessageDigest.getInstance("SHA-256").digest(value.toByteArray())
         .take(12).joinToString("") { "%02x".format(it.toInt() and 255) }
-    /** AI 补题可选题型（#125：电视上填空题输入麻烦，家长可以只补单选题） */
+    /** Tipos de pregunta opcionales para el relleno con IA (#125: en la TV es incómodo escribir en preguntas de relleno, los padres pueden rellenar solo con opción múltiple) */
     private val QUESTION_TYPES = listOf("single", "multiple", "boolean", "text", "subjective")
-    /** 老版本写死的题型，配置里没有 types 时沿用，避免升级后出题行为突然变化 */
+    /** Tipos de pregunta fijados en versiones antiguas; se usan cuando la configuración no tiene types, para evitar que el comportamiento cambie tras la actualización */
     private val LEGACY_TYPES = listOf("single", "text")
 
-    /** 与 BankMarket / GradingService 一致：公网远程题库必须走 HTTPS 防篡改，明文 HTTP 只允许局域网或本机地址。 */
+    /** Igual que BankMarket / GradingService: el banco remoto público debe usar HTTPS para evitar manipulación; HTTP en claro solo se permite en red local o dirección local. */
     internal fun validateUrl(raw: String): URL {
         val url = try { URL(raw.trim()) } catch (_: Exception) {
-            throw IllegalArgumentException("请使用不含用户名密码的 HTTP/HTTPS 地址")
+            throw IllegalArgumentException("Utilice una dirección HTTP/HTTPS sin usuario ni contraseña")
         }
         require(url.protocol in listOf("http", "https") && url.userInfo == null && url.ref == null && url.host.isNotEmpty() && url.toString().length <= 2048) {
-            "请使用不含用户名密码的 HTTP/HTTPS 地址"
+            "Utilice una dirección HTTP/HTTPS sin usuario ni contraseña"
         }
-        LocalOnlyGuard.requireLocalUrl(url.toString(), "远程题库")
+        LocalOnlyGuard.requireLocalUrl(url.toString(), "banco remoto")
         val ok = url.protocol == "https" || (url.protocol == "http" && isPrivateHost(url.host))
-        require(ok) { "公网远程题库必须使用 HTTPS；HTTP 只允许局域网或本机地址" }
+        require(ok) { "El banco remoto público debe usar HTTPS; HTTP solo se permite en red local o dirección local" }
         return url
     }
 
@@ -52,29 +52,29 @@ object BankAutomation {
 
     fun save(store: LocalStore, input: JSONObject): JSONObject {
         val sources = input.optJSONArray("sources") ?: JSONArray()
-        require(sources.length() <= 20) { "最多配置 20 个远程题库" }
+        require(sources.length() <= 20) { "Se pueden configurar como máximo 20 bancos remotos" }
         val names = mutableSetOf<String>()
         val urls = mutableSetOf<String>()
         val clean = JSONArray()
         for (i in 0 until sources.length()) {
             val source = sources.getJSONObject(i)
             val name = source.getString("name").trim()
-            require(name.length in 1..40 && names.add(name)) { "远程题库名称需唯一，1–40 个字" }
+            require(name.length in 1..40 && names.add(name)) { "El nombre del banco remoto debe ser único, de 1 a 40 caracteres" }
             val url = validateUrl(source.getString("url"))
-            require(urls.add(url.toString())) { "同一远程地址只能配置一次" }
+            require(urls.add(url.toString())) { "La misma dirección remota solo se puede configurar una vez" }
             clean.put(JSONObject().put("name", name).put("url", url.toString()).put("enabled", source.optBoolean("enabled", true)))
         }
         val minimum = input.optInt("minimum", 30)
         val batch = input.optInt("batch", 10)
         val attempts = input.optInt("masteryAttempts", 5)
         val accuracy = input.optInt("masteryAccuracy", 90)
-        require(minimum in 1..500 && batch in 1..20 && attempts in 1..100 && accuracy in 50..100) { "自动题库参数超出范围" }
+        require(minimum in 1..500 && batch in 1..20 && attempts in 1..100 && accuracy in 50..100) { "Los parámetros del banco automático están fuera de rango" }
         val topic = input.optString("topic").trim()
-        require(topic.length <= 2000 && (!input.optBoolean("autoAi") || topic.isNotBlank())) { "自动补题需要填写出题范围" }
+        require(topic.length <= 2000 && (!input.optBoolean("autoAi") || topic.isNotBlank())) { "El relleno automático requiere indicar el alcance de las preguntas" }
         val types = input.optJSONArray("types")?.let { array ->
             (0 until array.length()).map { array.optString(it) }.filter { it in QUESTION_TYPES }.distinct()
         }
-        if (input.has("types")) require(!types.isNullOrEmpty()) { "请选择至少一种自动补题的题型" }
+        if (input.has("types")) require(!types.isNullOrEmpty()) { "Seleccione al menos un tipo de pregunta para el relleno automático" }
         val saved = if (types?.isNotEmpty() == true) types
             else settings(store).optJSONArray("types")?.let { array -> (0 until array.length()).map { array.optString(it) }.filter { it in QUESTION_TYPES } }.orEmpty()
                 .ifEmpty { LEGACY_TYPES }
@@ -105,7 +105,7 @@ object BankAutomation {
                     if (LocalOnlyGuard.enabled && !LocalOnlyGuard.isLocalUrl(source.optString("url"))) continue
                     val entry = JSONObject().put("name", source.getString("name"))
                     try { entry.put("imported", syncSource(store, source)).put("ok", true) }
-                    catch (_: Exception) { entry.put("ok", false).put("message", "同步失败，请检查远程 JSON、地址和网络；本地题库已保留") }
+                    catch (_: Exception) { entry.put("ok", false).put("message", "Error de sincronización; verifique el JSON remoto, la dirección y la red; el banco local se ha conservado") }
                     results.put(entry)
                 }
                 report.put("sources", results)
@@ -125,13 +125,13 @@ object BankAutomation {
                             .put("types", config.optJSONArray("types")?.takeIf { it.length() > 0 } ?: JSONArray(LEGACY_TYPES))
                             .put("difficulty", "mixed").put("withTip", true).put("skipDuplicates", true))
                         val items = result.getJSONArray("items")
-                        for (i in 0 until items.length()) items.getJSONObject(i).put("bank", "AI补题")
+                        for (i in 0 until items.length()) items.getJSONObject(i).put("bank", "Relleno IA")
                         if (items.length() > 0) store.importQuestions(items)
                         report.put("generated", items.length())
                     }
                 }
                 report.put("ok", true)
-            } catch (_: Exception) { report.put("ok", false).put("message", "自动补题失败，请检查 AI 配置和网络；已有题目保留") }
+            } catch (_: Exception) { report.put("ok", false).put("message", "Error en el relleno automático; verifique la configuración de IA y la red; las preguntas existentes se conservan") }
             finally { store.set("bank_automation_status", report.toString()); running.set(false) }
         }
     }
@@ -148,7 +148,7 @@ object BankAutomation {
                 connection.instanceFollowRedirects = false
                 code = connection.responseCode
                 if (code !in listOf(301, 302, 303, 307, 308)) break
-                require(redirects++ < 5) { "重定向次数过多" }
+                require(redirects++ < 5) { "Demasiadas redirecciones" }
                 val loc = connection.getHeaderField("Location") ?: break
                 val next = validateUrl(URL(current, loc).toString())
                 connection.disconnect()
@@ -163,7 +163,7 @@ object BankAutomation {
             }
         } finally { connection.disconnect() }
         val items = if (text.startsWith("[")) JSONArray(text) else JSONObject(text).getJSONArray("items")
-        require(items.length() in 1..50000) { "远程题库需要 1–50000 题" }
+        require(items.length() in 1..50000) { "El banco remoto debe tener entre 1 y 50000 preguntas" }
         val sourceId = hash(source.getString("url"))
         val db = store.writableDatabase
         var committed = false
@@ -181,8 +181,8 @@ object BankAutomation {
             for (i in 0 until items.length()) {
                 val q = items.getJSONObject(i)
                 val id = "remote_${sourceId}_" + hash(q.optString("id").ifBlank { q.getString("q") })
-                require(keep.add(id)) { "远程题库存在重复 ID 或题干" }
-                q.put("id", id).put("bank", "远程·" + source.getString("name")).put("remoteSource", sourceId)
+                require(keep.add(id)) { "El banco remoto contiene ID o enunciados duplicados" }
+                q.put("id", id).put("bank", "Remoto·" + source.getString("name")).put("remoteSource", sourceId)
                 store.upsertQuestion(q)
             }
             store.deleteQuestions(old.filter { it !in keep })
