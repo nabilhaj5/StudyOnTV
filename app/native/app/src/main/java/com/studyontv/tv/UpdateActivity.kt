@@ -16,7 +16,6 @@ import org.json.JSONObject
 
 
 
-
 class UpdateActivity : Activity() {
     private var force = false
     private var sha256 = ""
@@ -52,13 +51,13 @@ class UpdateActivity : Activity() {
             setPadding(dp(if (tv) 32 else 20), dp(if (tv) 44 else 28), dp(if (tv) 32 else 20), dp(30))
         }
         content.addView(TvUi.text(this, if (tv) "题了个题 · TV" else "题了个题", 14f, palette.text3))
-        content.addView(TvUi.text(this, "发现新版本", 15f, palette.text2).apply {
+        content.addView(TvUi.text(this, "Nueva versión disponible", 15f, palette.text2).apply {
             setPadding(0, dp(18), 0, 0)
         })
         content.addView(TvUi.text(this, "v$latest", if (tv) 46f else 38f, palette.text, true).apply {
             setPadding(0, dp(2), 0, 0)
         })
-        content.addView(TvUi.text(this, "当前 v$current" + if (force) " · 需要更新后才能继续" else "", 14f, palette.text3).apply {
+        content.addView(TvUi.text(this, "Actual v$current" + if (force) " · Debes actualizar para continuar" else "", 14f, palette.text3).apply {
             setPadding(0, dp(6), 0, dp(22))
         })
 
@@ -67,7 +66,7 @@ class UpdateActivity : Activity() {
                 orientation = LinearLayout.VERTICAL
                 setPadding(dp(22), dp(18), dp(22), dp(18))
                 background = solid(palette.surface, 20)
-                addView(TvUi.text(context, "更新内容", 12f, palette.text3))
+                addView(TvUi.text(context, "Novedades", 12f, palette.text3))
                 val note = TvUi.text(context, notes, if (tv) 17f else 15f, palette.text).apply {
                     setLineSpacing(dp(7).toFloat(), 1.12f)
                     setPadding(0, dp(8), 0, 0)
@@ -89,7 +88,7 @@ class UpdateActivity : Activity() {
 
         val buttons = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         lateinit var go: android.widget.Button
-        go = TvUi.button(this, "立即更新", true) {
+        go = TvUi.button(this, "Actualizar ahora", true) {
             startUpdate(url, go, progress)
         }
         go.textSize = if (tv) 21f else 18f
@@ -99,14 +98,14 @@ class UpdateActivity : Activity() {
 
         val secondary = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         if (!force) {
-            secondary.addView(TvUi.button(this, "以后再说") { finish() },
+            secondary.addView(TvUi.button(this, "Más tarde") { finish() },
                 LinearLayout.LayoutParams(0, dp(if (tv) 52 else 48), 1f))
         }
-        secondary.addView(TvUi.button(this, "手动下载") {
+        secondary.addView(TvUi.button(this, "Descarga manual") {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Pgyer.pageUrl)))
             } catch (e: Exception) {
-                status.text = "这台设备没有可用浏览器，请用手机或电脑访问 " + Pgyer.pageUrl
+                status.text = "Este dispositivo no tiene navegador disponible, visita " + Pgyer.pageUrl + " desde un móvil u ordenador"
                 Diag.error("Update", "cannot open manual download page", e)
             }
         }, LinearLayout.LayoutParams(0, dp(if (tv) 52 else 48), 1f).apply {
@@ -115,7 +114,7 @@ class UpdateActivity : Activity() {
         buttons.addView(secondary, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(12) })
         content.addView(buttons, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT))
 
-        status = TvUi.text(this, "下载后覆盖安装，题库和设置不会丢", 12f, palette.text3).apply {
+        status = TvUi.text(this, "Se instala encima y no se pierden el banco de preguntas ni los ajustes", 12f, palette.text3).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(14), 0, 0)
         }
@@ -141,15 +140,15 @@ class UpdateActivity : Activity() {
         if (error.isNotEmpty()) {
             installHandedOff = false
             Prefs.setUpdateInProgress(this, false)
-            status.text = "$error。可以点「立即更新」再试一次，或用「手动下载」装。"
+            status.text = "$error. Puedes pulsar «Actualizar ahora» para reintentar, o usar «Descarga manual» para instalarlo."
             goButton?.isEnabled = true
-            goButton?.text = "重试安装"
+            goButton?.text = "Reintentar instalación"
         } else if (!ApkInstaller.canInstall(this)) {
-            goButton?.text = "去允许安装应用"
-            status.text = "这套电视系统默认禁止应用自己安装更新，需要先允许「题了个题」安装应用"
-        } else if (goButton?.text?.toString() == "去允许安装应用") {
+            goButton?.text = "Permitir instalar apps"
+            status.text = "Este sistema de TV bloquea por defecto que la app se instale actualizaciones; primero debes permitir que «题了个题» instale aplicaciones"
+        } else if (goButton?.text?.toString() == "Permitir instalar apps") {
             goButton?.let { refreshPrimaryButtonLabel(it) }
-            status.text = "下载后覆盖安装，题库和设置不会丢"
+            status.text = "Se instala encima y no se pierden el banco de preguntas ni los ajustes"
         }
     }
 
@@ -164,8 +163,8 @@ class UpdateActivity : Activity() {
         Thread {
             val downloaded = try { ApkInstaller.alreadyDownloaded(this, 0) } catch (_: Exception) { false }
             runOnUiThread {
-                if (!isFinishing && button.isEnabled && (button.text == "立即更新" || button.text == "去允许安装应用")) {
-                    button.text = if (downloaded) "开始安装" else "立即更新"
+                if (!isFinishing && button.isEnabled && (button.text == "Actualizar ahora" || button.text == "Permitir instalar apps")) {
+                    button.text = if (downloaded) "Iniciar instalación" else "Actualizar ahora"
                 }
             }
         }.apply { isDaemon = true }.start()
@@ -188,15 +187,15 @@ class UpdateActivity : Activity() {
     
     private fun startUpdate(url: String, button: TextView, progress: android.widget.ProgressBar? = null) {
         if (!button.isEnabled) return
-        if (url.isEmpty()) { button.text = "没有下载地址"; return }
+        if (url.isEmpty()) { button.text = "No hay dirección de descarga"; return }
 
         if (!ApkInstaller.canInstall(this)) {
-            // Android 8+ 是按应用授权的：没开之前调起安装器只会失败，先去设置里打开
-            status.text = "先允许「题了个题」安装应用，允许后返回这里再点一次"
+            // Android 8+ autoriza por app: si no está activado, lanzar el instalador solo fallará; hay que abrirlo primero en ajustes
+            status.text = "Primero permite que «题了个题» instale aplicaciones; cuando lo permitas, vuelve aquí y pulsa otra vez"
             try {
                 startActivity(ApkInstaller.permissionIntent(this))
             } catch (e: Exception) {
-                status.text = "这台电视找不到「安装未知应用」设置页，请到 设置 → 应用 里允许「题了个题」安装应用"
+                status.text = "Esta TV no encuentra la página de ajustes «Instalar apps desconocidas»; ve a Ajustes → Aplicaciones y permite que «题了个题» instale aplicaciones"
                 Diag.warn("Install", "cannot open unknown-sources settings: ${e.javaClass.simpleName}")
             }
             return
@@ -205,7 +204,7 @@ class UpdateActivity : Activity() {
         installHandedOff = false
         Prefs.setUpdateInProgress(this, true)
         button.isEnabled = false
-        button.text = "准备安装…"
+        button.text = "Preparando instalación…"
         Thread {
             try {
                 val ready = ApkInstaller.apkFile(this)
@@ -218,11 +217,11 @@ class UpdateActivity : Activity() {
                     }
                     runOnUiThread {
                         if (installed) {
-                            button.text = "正在安装…"
+                            button.text = "Instalando…"
                         } else {
                             button.isEnabled = true
-                            button.text = "安装失败，重试"
-                            status.text = ApkInstaller.lastError.ifEmpty { "系统没有接受这次安装" }
+                            button.text = "Instalación fallida, reintentar"
+                            status.text = ApkInstaller.lastError.ifEmpty { "El sistema no aceptó esta instalación" }
                             button.requestFocus()
                         }
                     }
@@ -230,12 +229,12 @@ class UpdateActivity : Activity() {
                 }
 
                 runOnUiThread {
-                    button.text = "下载中 0%"
+                    button.text = "Descargando 0%"
                     progress?.visibility = View.VISIBLE
                 }
-                val file = ApkInstaller.download(this, url, sha256, { source -> runOnUiThread { status.text = "下载线路：$source" } }) { percent ->
+                val file = ApkInstaller.download(this, url, sha256, { source -> runOnUiThread { status.text = "Fuente de descarga: $source" } }) { percent ->
                     runOnUiThread {
-                        button.text = if (percent < 0) "下载中…" else if (percent < 100) "下载中 $percent%" else "正在准备安装…"
+                        button.text = if (percent < 0) "Descargando…" else if (percent < 100) "Descargando $percent%" else "Preparando instalación…"
                         if (percent >= 0) progress?.progress = percent.coerceIn(0, 100)
                     }
                 }
@@ -247,12 +246,12 @@ class UpdateActivity : Activity() {
                 }
                 runOnUiThread {
                     if (installed) {
-                        button.text = "正在安装…"
+                        button.text = "Instalando…"
                     } else {
                         button.isEnabled = true
-                        button.text = if (file == null) "下载失败，重试" else "安装失败，重试"
-                        status.text = (ApkInstaller.lastError.ifEmpty { if (file == null) "下载失败，请检查网络" else "系统没有接受这次安装" }) +
-                            "。也可以点「手动下载」到蒲公英安装。"
+                        button.text = if (file == null) "Descarga fallida, reintentar" else "Instalación fallida, reintentar"
+                        status.text = (ApkInstaller.lastError.ifEmpty { if (file == null) "Descarga fallida, comprueba la red" else "El sistema no aceptó esta instalación" }) +
+                            ". También puedes usar «Descarga manual» e instalarlo desde Pgyer."
                         progress?.visibility = View.GONE
                     }
                     button.requestFocus()
@@ -262,8 +261,8 @@ class UpdateActivity : Activity() {
                 Diag.error("Update", "update task failed", e)
                 runOnUiThread {
                     button.isEnabled = true
-                    button.text = "安装失败，重试"
-                    status.text = "更新准备失败：${e.message ?: e.javaClass.simpleName}"
+                    button.text = "Instalación fallida, reintentar"
+                    status.text = "Error al preparar la actualización: ${e.message ?: e.javaClass.simpleName}"
                     progress?.visibility = View.GONE
                     button.requestFocus()
                 }
