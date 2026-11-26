@@ -10,7 +10,7 @@ import android.widget.Toast
 import android.webkit.WebView
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Only immutable, already-computed state is read on the accessibility key path. */
+/** En la ruta de teclas de accesibilidad solo se lee estado inmutable y ya calculado. */
 data class LearningExitSnapshot(val canExit: Boolean, val publishedAt: Long)
 
 object LearningNavigation {
@@ -30,23 +30,23 @@ object LearningNavigation {
     private val noticePending = AtomicBoolean(false)
     private var notice: Toast? = null
 
-    /** Shared by WebView Back and the accessibility key path; UI work never runs in onKeyEvent. */
+    /** Compartido por el Atrás del WebView y la ruta de teclas de accesibilidad; el trabajo de UI nunca se ejecuta en onKeyEvent. */
     fun notifyBlocked(context: Context) {
         if (!noticePending.compareAndSet(false, true)) return
         val app = context.applicationContext
         noticeHandler.post {
             noticePending.set(false)
-            // A queued notice must not appear after an unlock or on an unrelated screen.
+            // Un aviso en cola no debe aparecer tras un desbloqueo ni en una pantalla no relacionada.
             if (!shouldBlockHome()) return@post
             notice?.cancel()
-            // System Toast windows can sit below our full-screen overlays. Render in the owning page.
+            // Las ventanas Toast del sistema pueden quedar por debajo de nuestras capas a pantalla completa. Se dibuja en la página propietaria.
             if (WatchAccessibilityService.showNavigationBlocked() || GateService.showNavigationBlocked() ||
                 (Foreground.resumedActivity() as? MainActivity)?.showNavigationBlocked() == true) return@post
             notice = Toast.makeText(app, R.string.navigation_unavailable, Toast.LENGTH_SHORT).also { it.show() }
         }
     }
 
-    /** Main-thread rendering shared by activity and overlay WebViews; native input pages use Toast. */
+    /** Dibujado en el hilo principal compartido por el activity y los WebView de las capas; las páginas de entrada nativas usan Toast. */
     fun showBlockedNotice(web: WebView?): Boolean {
         if (web == null || !web.isAttachedToWindow || !web.isShown) return false
         val message = org.json.JSONObject.quote(web.context.getString(R.string.navigation_unavailable))
@@ -56,7 +56,7 @@ object LearningNavigation {
         } catch (_: RuntimeException) { false }
     }
 
-    /** Called once the runtime owns this engine; isolated test engines never publish globally. */
+    /** Se llama cuando el runtime pasa a ser dueño de este motor; los motores de prueba aislados nunca publican globalmente. */
     fun start(value: LearningEngine) {
         engine = value
         if (worker == null) {
@@ -72,7 +72,7 @@ object LearningNavigation {
 
     internal fun allows(current: LearningExitSnapshot?, now: Long): Boolean {
         current ?: return false
-        // A stalled refresher must not leave an expired temporary unlock open indefinitely.
+        // Un refrescador bloqueado no debe dejar abierto indefinidamente un desbloqueo temporal ya caducado.
         return current.canExit && now - current.publishedAt in 0..ALLOW_LEASE_MS
     }
 
@@ -88,7 +88,7 @@ object LearningNavigation {
     }
 }
 
-/** Keep the same decision for DOWN, repeats and UP, even if the policy changes mid-press. */
+/** Mantener la misma decisión para DOWN, repeticiones y UP, aunque la política cambie a mitad de la pulsación. */
 class NavigationKeyFilter(private val blocked: () -> Boolean) {
     private data class Key(val deviceId: Int, val keyCode: Int)
     private val presses = mutableMapOf<Key, Boolean>()
@@ -98,8 +98,8 @@ class NavigationKeyFilter(private val blocked: () -> Boolean) {
         val key = Key(event.deviceId, event.keyCode)
         return when (event.action) {
             KeyEvent.ACTION_DOWN -> {
-                // Chording any key can change downTime, including Back/volume keys we pass through.
-                // Only a fresh DOWN starts a new decision; repeats retain it until this key's UP.
+                // Pulsar cualquier tecla puede cambiar downTime, incluidas Atrás/volumen que dejamos pasar.
+                // Solo un DOWN nuevo inicia una nueva decisión; las repeticiones la mantienen hasta el UP de esta tecla.
                 if (event.repeatCount == 0) blocked().also { presses[key] = it }
                 else presses[key] == true
             }
