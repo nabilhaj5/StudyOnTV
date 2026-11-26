@@ -5,20 +5,22 @@ import android.view.KeyEvent
 import android.webkit.WebView
 
 /**
- * 把遥控器方向键 / OK / 返回转发给学习页里的 window.TV。
+ * Reenvía las teclas de dirección / OK / Atrás del mando a distancia a window.TV en la página de estudio.
  *
- * 隐藏的家长入口：焦点已在最上方（↑ 无法再移动）时连续短按 ↑ 5 次。
- * 以前只要连按 5 次 ↑ 就会触发，孩子在选项之间上移时很容易误开家长入口。
- * 页面没加载出来（JS 返回 null）时也计数，保证始终能进入家长入口。
+ * Entrada oculta para padres: cuando el foco ya está arriba del todo (↑ no puede moverse más)
+ * se pulsa ↑ brevemente 5 veces seguidas.
+ * Antes bastaba con pulsar ↑ 5 veces seguidas para activarla, y el niño la abría por error
+ * fácilmente al subir entre opciones. También se cuenta cuando la página no ha cargado
+ * (JS devuelve null), para garantizar que siempre se pueda entrar a la entrada para padres.
  */
-class RemoteKeys(private val openParent: () -> Unit) {
-    private var upCount = 0
-    private var lastUp = 0L
+class TeclasRemotas(private val abrirPadres: () -> Unit) {
+    private var contadorArriba = 0
+    private var ultimoArriba = 0L
 
-    /** @return true 表示已处理该按键 */
-    fun handle(web: WebView?, event: KeyEvent): Boolean {
-        val code = event.keyCode
-        val js = when (code) {
+    /** @return true indica que la tecla ya fue procesada */
+    fun manejar(web: WebView?, evento: KeyEvent): Boolean {
+        val codigo = evento.keyCode
+        val js = when (codigo) {
             KeyEvent.KEYCODE_DPAD_LEFT -> "move('left')"
             KeyEvent.KEYCODE_DPAD_RIGHT -> "move('right')"
             KeyEvent.KEYCODE_DPAD_UP -> "move('up')"
@@ -27,27 +29,28 @@ class RemoteKeys(private val openParent: () -> Unit) {
             KeyEvent.KEYCODE_BACK -> "back()"
             else -> return false
         }
-        if (event.action != KeyEvent.ACTION_DOWN) return true
-        // 长按 OK / 返回不重复触发（多选题长按会来回勾选、提交按钮会重复提交）
-        if (event.repeatCount > 0 && (js == "select()" || js == "back()")) return true
-        if (code != KeyEvent.KEYCODE_DPAD_UP && event.repeatCount == 0) upCount = 0
+        if (evento.action != KeyEvent.ACTION_DOWN) return true
+        // Mantener pulsado OK / Atrás no dispara repetidamente (en preguntas de opción múltiple
+        // se marcaría y desmarcaría, y el botón de enviar se enviaría varias veces)
+        if (evento.repeatCount > 0 && (js == "select()" || js == "back()")) return true
+        if (codigo != KeyEvent.KEYCODE_DPAD_UP && evento.repeatCount == 0) contadorArriba = 0
         if (web == null) {
-            if (code == KeyEvent.KEYCODE_DPAD_UP) countUp(event)
+            if (codigo == KeyEvent.KEYCODE_DPAD_UP) contarArriba(evento)
             return true
         }
-        if (code == KeyEvent.KEYCODE_DPAD_UP) {
-            web.evaluateJavascript("window.TV?TV.move('up'):null") { result -> if (result != "true") countUp(event) }
+        if (codigo == KeyEvent.KEYCODE_DPAD_UP) {
+            web.evaluateJavascript("window.TV?TV.move('up'):null") { resultado -> if (resultado != "true") contarArriba(evento) }
         } else {
             web.evaluateJavascript("window.TV&&TV.$js", null)
         }
         return true
     }
 
-    private fun countUp(event: KeyEvent) {
-        if (event.repeatCount > 0) return
-        val now = SystemClock.elapsedRealtime()
-        upCount = if (now - lastUp < 900) upCount + 1 else 1
-        lastUp = now
-        if (upCount >= 5) { upCount = 0; openParent() }
+    private fun contarArriba(evento: KeyEvent) {
+        if (evento.repeatCount > 0) return
+        val ahora = SystemClock.elapsedRealtime()
+        contadorArriba = if (ahora - ultimoArriba < 900) contadorArriba + 1 else 1
+        ultimoArriba = ahora
+        if (contadorArriba >= 5) { contadorArriba = 0; abrirPadres() }
     }
 }
