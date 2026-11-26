@@ -26,7 +26,7 @@ object LauncherIcon {
         val entries = pm.queryIntentActivities(intent, PackageManager.GET_DISABLED_COMPONENTS).map { it.activityInfo }
         val name = entries.firstOrNull { it.targetActivity == MainActivity::class.java.name }?.name
             ?: entries.firstOrNull { it.name.endsWith(".Launcher") }?.name
-            ?: throw IllegalStateException("找不到桌面入口")
+            ?: throw IllegalStateException("No se encuentra el acceso directo del escritorio")
         return ComponentName(context.packageName, name)
     }
 
@@ -43,7 +43,7 @@ object LauncherIcon {
             PackageManager.DONT_KILL_APP
         )
         val now = hidden(context)
-        if (now != hidden) throw IllegalStateException(if (hidden) "隐藏桌面图标失败" else "恢复桌面图标失败")
+        if (now != hidden) throw IllegalStateException(if (hidden) "No se pudo ocultar el icono del escritorio" else "No se pudo restaurar el icono del escritorio")
         return now
     }
 }
