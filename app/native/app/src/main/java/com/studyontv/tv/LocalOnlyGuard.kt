@@ -109,7 +109,7 @@ object LocalOnlyGuard {
 
     fun requireLocalUrl(rawUrl: String, purpose: String) {
         if (enabled && !isLocalUrl(rawUrl)) {
-            throw IllegalArgumentException("仅本地隐私版（EU Local-Only）仅允许连接本机或局域网内的$purpose")
+            throw IllegalArgumentException("La versión de privacidad solo local (EU Local-Only) solo permite conectar con $purpose de este equipo o de la red local")
         }
     }
 }
