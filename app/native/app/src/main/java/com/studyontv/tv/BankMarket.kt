@@ -37,11 +37,11 @@ object BankMarket {
     fun addSource(store: LocalStore, name: String, url: String): JSONObject {
         val cleanUrl = validate(url).toString()
         // 面板只让填地址，名称就取主机名，列表里好认
-        val cleanName = name.trim().ifEmpty { URL(cleanUrl).host ?: "自定义题库源" }.take(40)
+        val cleanName = name.trim().ifEmpty { URL(cleanUrl).host ?: "Fuente de banco personalizada" }.take(40)
         val items = saved(store)
         if (settings(store).let { all -> (0 until all.length()).any { all.getJSONObject(it).optString("url") == cleanUrl } })
-            throw IllegalArgumentException("这个地址已经添加过了")
-        require(items.length() < 20) { "最多添加 20 个题库源" }
+            throw IllegalArgumentException("Esta dirección ya se ha añadido")
+        require(items.length() < 20) { "Máximo 20 fuentes de bancos de preguntas" }
         items.put(JSONObject().put("name", cleanName).put("url", cleanUrl))
         persist(store, items)
         return JSONObject().put("sources", settings(store))
@@ -78,7 +78,7 @@ object BankMarket {
                     banks.put(JSONObject(bank.toString()).put("source", name))
                 }
             } catch (e: Exception) {
-                failed.put(JSONObject().put("source", name).put("message", e.message ?: "拉取失败"))
+                failed.put(JSONObject().put("source", name).put("message", e.message ?: "Error al descargar"))
             }
         }
         return JSONObject().put("sources", sources).put("banks", banks).put("failed", failed)
@@ -90,17 +90,17 @@ object BankMarket {
         return try {
             if (text.trimStart().startsWith("[")) JSONArray(text) else JSONObject(text)
         } catch (e: Exception) {
-            throw IllegalArgumentException("这个地址返回的不是题库 JSON")
+            throw IllegalArgumentException("Esta dirección no devuelve un JSON de banco de preguntas")
         }
     }
 
     private fun validate(raw: String): URL {
-        LocalOnlyGuard.requireLocalUrl(raw, "题库源")
+        LocalOnlyGuard.requireLocalUrl(raw, "fuente de banco de preguntas")
         val url = URL(raw.trim())
-        require(url.userInfo == null) { "地址里不能带用户名密码" }
-        require(url.toString().length <= 2048) { "地址太长" }
+        require(url.userInfo == null) { "La dirección no puede incluir usuario y contraseña" }
+        require(url.toString().length <= 2048) { "La dirección es demasiado larga" }
         val ok = url.protocol == "https" || (url.protocol == "http" && isLocal(url.host))
-        require(ok) { "公网地址必须用 https；局域网地址可以用 http" }
+        require(ok) { "Las direcciones públicas deben usar https; las direcciones de red local pueden usar http" }
         return url
     }
 
@@ -139,7 +139,7 @@ object BankMarket {
                 last = e
             }
         }
-        throw IllegalArgumentException(last?.message ?: "下载失败")
+        throw IllegalArgumentException(last?.message ?: "Error al descargar")
     }
 
     private fun download(raw: String): String {
@@ -155,14 +155,14 @@ object BankMarket {
                 connection.setRequestProperty("User-Agent", "StudyOnTV/${BuildConfig.VERSION_NAME}")
                 code = connection.responseCode
                 if (code !in listOf(301, 302, 303, 307, 308)) break
-                require(redirects++ < 5) { "重定向次数过多" }
+                require(redirects++ < 5) { "Demasiadas redirecciones" }
                 val loc = connection.getHeaderField("Location") ?: break
                 val next = validate(URL(current, loc).toString())
                 connection.disconnect()
                 current = next
                 connection = current.openConnection() as HttpURLConnection
             }
-            require(code in 200..299) { "服务器返回 HTTP $code" }
+            require(code in 200..299) { "El servidor devolvió HTTP $code" }
             connection.inputStream.use { input ->
                 val buffer = ByteArrayOutputStream()
                 val chunk = ByteArray(16 * 1024)
@@ -170,14 +170,14 @@ object BankMarket {
                     val read = input.read(chunk)
                     if (read < 0) break
                     buffer.write(chunk, 0, read)
-                    require(buffer.size() <= MAX_BYTES) { "题库文件超过 20 MB" }
+                    require(buffer.size() <= MAX_BYTES) { "El archivo del banco de preguntas supera los 20 MB" }
                 }
                 buffer.toString("UTF-8").removePrefix("﻿").trim()
             }
         } catch (e: IllegalArgumentException) {
             throw e
         } catch (e: Exception) {
-            throw IllegalArgumentException("下载失败：${e.message ?: e.javaClass.simpleName}")
+            throw IllegalArgumentException("Error al descargar: ${e.message ?: e.javaClass.simpleName}")
         } finally {
             connection.disconnect()
         }
