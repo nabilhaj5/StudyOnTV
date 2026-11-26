@@ -40,10 +40,10 @@ object HolidayService {
 
     /** 同步某一年；先试国内可访问的接口和 CDN，全部失败时用内置数据。 */
     fun fetch(context: Context, year: Int): JSONObject {
-        require(year in 2000..2100) { "年份不正确" }
+        require(year in 2000..2100) { "El año no es correcto" }
         if (LocalOnlyGuard.enabled) {
             val text = context.assets.open("holidays/$year.json").use { it.readBytes().toString(Charsets.UTF_8) }
-            return save(context, year, parse(JSONObject(text)), "内置数据")
+            return save(context, year, parse(JSONObject(text)), "Datos integrados")
         }
         val sources = listOf(
             "jiejiari" to "https://api.jiejiariapi.com/v1/holidays/$year",
@@ -63,7 +63,7 @@ object HolidayService {
         }
         return try {
             val text = context.assets.open("holidays/$year.json").use { it.readBytes().toString(Charsets.UTF_8) }
-            save(context, year, parse(JSONObject(text)), "内置数据")
+            save(context, year, parse(JSONObject(text)), "Datos integrados")
         } catch (e: Exception) {
             throw lastError ?: e
         }
@@ -86,7 +86,7 @@ object HolidayService {
                 val item = days.optJSONObject(i) ?: continue
                 if (!item.optBoolean("isOffDay", false)) continue
                 val date = item.optString("date")
-                if (date.isNotEmpty()) dates.put(date, item.optString("name").ifEmpty { "节假日" })
+                if (date.isNotEmpty()) dates.put(date, item.optString("name").ifEmpty { "Día festivo" })
             }
             return dates
         }
@@ -96,7 +96,7 @@ object HolidayService {
             val item = root.optJSONObject(key) ?: continue
             if (!item.optBoolean("isOffDay", false)) continue
             val date = item.optString("date").ifEmpty { key }
-            if (date.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}"))) dates.put(date, item.optString("name").ifEmpty { "节假日" })
+            if (date.matches(Regex("[0-9]{4}-[0-9]{2}-[0-9]{2}"))) dates.put(date, item.optString("name").ifEmpty { "Día festivo" })
         }
         return dates
     }
@@ -109,13 +109,13 @@ object HolidayService {
             setRequestProperty("Accept", "application/json")
         }
         try {
-            require(connection.responseCode in 200..299) { "节假日服务返回 HTTP ${connection.responseCode}" }
+            require(connection.responseCode in 200..299) { "El servicio de días festivos devolvió HTTP ${connection.responseCode}" }
             val bytes = connection.inputStream.use { input ->
                 val out = java.io.ByteArrayOutputStream()
                 val buf = ByteArray(8192)
                 var n: Int
                 while (input.read(buf).also { n = it } >= 0) {
-                    require(out.size() + n < 1_000_000) { "节假日数据过大" }
+                    require(out.size() + n < 1_000_000) { "Los datos de días festivos son demasiado grandes" }
                     out.write(buf, 0, n)
                 }
                 out.toByteArray()
