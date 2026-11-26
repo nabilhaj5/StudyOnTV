@@ -25,14 +25,14 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     @JavascriptInterface
     fun apiToken(): String = AdminAuth.deviceToken
 
-    /** 连接页（家长已验证）里的按钮：权限设置 / 修改密码 */
+    /** Botones de la página de conexión (padre ya verificado): ajustes de permisos / cambiar contraseña */
     @JavascriptInterface
     fun openPermissions() {
         if (!connectionAllowed) return
         activity.runOnUiThread { activity.startActivity(Intent(activity, OnboardingActivity::class.java)) }
     }
 
-    /** 网页在 HTTP 局域网环境下拿不到 Clipboard API，交给原生写剪贴板最稳 */
+    /** La web en HTTP por LAN no tiene acceso a la API Clipboard; es más fiable que lo escriba el nativo */
     @JavascriptInterface
     fun copyText(value: String): Boolean {
         if (!connectionAllowed) return false
@@ -67,18 +67,20 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     }
 
     /**
-     * 锁定 / 答题页的家长解锁入口（#201）：家长直接用遥控器输入密码，临时解锁 30 分钟。
-     * 默认关闭（allowQuizUnlock），避免把密码入口摆在孩子面前；密码只在本机校验，不上报。
+     * Entrada de desbloqueo para padres en la página de bloqueo / preguntas (#201): el padre introduce
+     * la contraseña directamente con el mando y se desbloquea temporalmente durante 30 minutos.
+     * Desactivado por defecto (allowQuizUnlock) para no poner la entrada de contraseña delante del niño;
+     * la contraseña solo se valida en el dispositivo y no se envía a ningún sitio.
      */
     @JavascriptInterface
     fun askParentPassword() {
         activity.runOnUiThread {
             if (!quizUnlockAllowed()) return@runOnUiThread
-            web?.let { InputSupport.openPassword(activity, it, "输入家长密码，验证后可临时解锁 $QUIZ_UNLOCK_MINUTES 分钟") }
+            web?.let { InputSupport.openPassword(activity, it, "Introduce la contraseña de padre; tras verificarla se desbloqueará temporalmente durante $QUIZ_UNLOCK_MINUTES minutos") }
         }
     }
 
-    /** 校验家长密码并临时解锁；返回 {ok, status} 或 {ok:false, error:disabled|wrong|failed} */
+    /** Valida la contraseña de padre y desbloquea temporalmente; devuelve {ok, status} o {ok:false, error:disabled|wrong|failed} */
     @JavascriptInterface
     fun quizUnlock(value: String): String {
         if (!quizUnlockAllowed()) return JSONObject().put("ok", false).put("error", "disabled").toString()
@@ -86,7 +88,7 @@ open class DeviceBridge(protected val activity: Activity, private val connection
         return try {
             AdminAuth.markVerified()
             val status = DeviceRuntime.learning.remote("unlock", QUIZ_UNLOCK_MINUTES, "quiz")
-            Diag.info("Auth", "家长在锁定页临时解锁 $QUIZ_UNLOCK_MINUTES 分钟")
+            Diag.info("Auth", "el padre desbloqueó temporalmente $QUIZ_UNLOCK_MINUTES minutos en la página de bloqueo")
             GateService.hideGates()
             GateService.refreshNow()
             JSONObject().put("ok", true).put("status", status).toString()
@@ -101,13 +103,15 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     } catch (_: Throwable) { false }
 
     /**
-     * 系统设置 / 应用管理拦截页的家长验证入口：只临时放行系统设置 2 分钟（不增加娱乐观看时长），
-     * 方便家长连接 WiFi / 蓝牙或正常管理设备，切回本应用或满 2 分钟后立即恢复拦截。
+     * Entrada de verificación para padres en la página de bloqueo de ajustes del sistema / gestión de apps:
+     * solo permite acceder temporalmente a los ajustes del sistema durante 2 minutos (no suma tiempo de ocio),
+     * para que el padre pueda conectar WiFi / Bluetooth o gestionar el dispositivo; al volver a esta app
+     * o al pasar 2 minutos se restaura el bloqueo de inmediato.
      */
     @JavascriptInterface
     fun askSettingsPassword() {
         activity.runOnUiThread {
-            web?.let { InputSupport.openPassword(activity, it, "输入管理密码，验证后可临时进入系统设置 2 分钟") }
+            web?.let { InputSupport.openPassword(activity, it, "Introduce la contraseña de administración; tras verificarla podrás entrar temporalmente en los ajustes del sistema durante 2 minutos") }
         }
     }
 
@@ -115,7 +119,7 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     fun settingsUnlock(value: String): String {
         if (!AdminAuth.verify(activity, value)) return JSONObject().put("ok", false).put("error", "wrong").toString()
         SystemSettingsGuard.grant()
-        Diag.info("Auth", "家长在设置拦截页验证密码，临时放行系统设置 2 分钟")
+        Diag.info("Auth", "el padre verificó la contraseña en la página de bloqueo de ajustes y se permite temporalmente el acceso a los ajustes del sistema durante 2 minutos")
         GateService.hideGates()
         activity.runOnUiThread {
             if (activity is GateActivity) activity.finish() else activity.moveTaskToBack(true)
@@ -136,28 +140,31 @@ open class DeviceBridge(protected val activity: Activity, private val connection
         if (!status.optBoolean("canExit")) return
         activity.runOnUiThread {
             GateService.hideGates()
-            // 答题结束回到「上一个任务」，绝不能主动跳桌面，否则正在播放的视频会被顶掉（#54 / #63）。
-            // GateActivity 是独立任务（singleInstance + 独立 taskAffinity），finish 之后系统会自动
-            // 把下面的任务（云视听 / 腾讯视频）带回前台；主界面则直接把整个任务压到后台。
+            // Al terminar las preguntas se vuelve a la «tarea anterior»; nunca se salta al escritorio por iniciativa propia,
+            // porque el vídeo que se está reproduciendo se interrumpiría (#54 / #63).
+            // GateActivity es una tarea independiente (singleInstance + taskAffinity propia); al hacer finish el sistema
+            // devuelve automáticamente al frente la tarea inferior (云视听 / Tencent Video); la pantalla principal,
+            // en cambio, manda toda la tarea al fondo.
             if (activity is GateActivity) activity.finish()
             else activity.moveTaskToBack(true)
         }
     }
 
     /**
-     * 答题解锁后回到解题前的画面。
+     * Tras desbloquear con las preguntas se vuelve a la pantalla previa a la resolución.
      *
-     * 先收起管控页并把自己的任务退到后台，正常情况下之前那个应用就会回到前台；
-     * 如果几百毫秒后前台仍是我们自己或桌面（部分机型会把答题页当成独立任务，
-     * finish 之后露出的是桌面），再显式把记下的应用拉起来。
+     * Primero se oculta la página de control y se manda al fondo su propia tarea; en condiciones normales
+     * la app anterior vuelve al frente; si unos cientos de milisegundos después el frente sigue siendo
+     * nosotros mismos o el escritorio (algunos modelos tratan la página de preguntas como tarea independiente
+     * y tras el finish aparece el escritorio), se lanza explícitamente la app recordada.
      */
     @JavascriptInterface
     fun resumePrevious() {
         val status = DeviceRuntime.learning.status()
         if (!status.optBoolean("canExit")) return
-        // 不检查 connectionAllowed：和学习页 / GateActivity 共用同一个桥，
-        // 管控页里 connectionAllowed 是 false，检查了会导致解锁后无法还原画面。
-        // 这个调用只会收起管控页并恢复自己记下的受控应用，不暴露任何设备信息。
+        // No se comprueba connectionAllowed: comparte el mismo puente con la página de estudio / GateActivity,
+        // y en la página de control connectionAllowed es false; comprobarlo impediría restaurar la pantalla tras desbloquear.
+        // Esta llamada solo oculta la página de control y restaura la app controlada que ella misma recordó, sin exponer datos del dispositivo.
         activity.runOnUiThread {
             GateService.hideGates()
             val target = GateService.rememberedActive()
@@ -204,7 +211,7 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     @JavascriptInterface
     fun readInLanguage(text: String, language: String) = SpeechReader.read(activity, text, language, ::speechNotice)
 
-    /** 听力题：按题指定语速朗读（listenRate），rate 传 -1 表示跟随朗读设置里的全局语速 */
+    /** Preguntas de comprensión auditiva: leer con la velocidad indicada por pregunta (listenRate); rate = -1 significa seguir la velocidad global de los ajustes de lectura */
     @JavascriptInterface
     fun readWithRate(text: String, language: String, rate: Double) = SpeechReader.read(activity, text, language, ::speechNotice, rate)
 
@@ -214,11 +221,11 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     @JavascriptInterface
     fun playAudio(url: String) = SpeechReader.playAudio(activity, url, ::speechNotice)
 
-    /** 最近一次朗读 / 音频播放的结果；失败时 reason/message/degraded 有值（#87 不再静默） */
+    /** Resultado de la última lectura / reproducción de audio; en caso de fallo tiene valor reason/message/degraded (#87 ya no es silencioso) */
     @JavascriptInterface
     fun speechStatus(): String = SpeechReader.status().toString()
 
-    /** 失败信息推给网页：页面里装了 window.SOTV_SPEECH_NOTICE 就能显示提示（与 SOTV_INPUT/SOTV_UPDATE 同一约定） */
+    /** La información de fallo se envía a la web: si la página tiene instalado window.SOTV_SPEECH_NOTICE puede mostrar el aviso (misma convención que SOTV_INPUT/SOTV_UPDATE) */
     private fun speechNotice(payload: JSONObject) {
         val view = web ?: return
         view.post { try { view.evaluateJavascript("window.SOTV_SPEECH_NOTICE&&SOTV_SPEECH_NOTICE($payload)", null) } catch (_: Throwable) { } }
@@ -233,13 +240,14 @@ open class DeviceBridge(protected val activity: Activity, private val connection
     }
 
     companion object {
-        /** 锁定页家长验证后临时解锁的分钟数 */
+        /** Minutos de desbloqueo temporal tras la verificación del padre en la página de bloqueo */
         const val QUIZ_UNLOCK_MINUTES = 30
 
         /**
-         * 打开系统设置（#130）。很多电视 / 投影 / 平板把原生设置菜单精简掉了，
-         * 家长找不到「应用管理 → 权限」这类入口，应用里需要一个能把完整设置调起来的按钮。
-         * 逐级回退：系统设置 → 本应用详情页；都打不开时返回 false，由调用方提示。
+         * Abrir los ajustes del sistema (#130). Muchas TV / proyectores / tablets recortan el menú de ajustes nativo,
+         * y el padre no encuentra entradas como «Gestión de apps → Permisos»; la app necesita un botón que abra
+         * los ajustes completos. Se intenta en orden: ajustes del sistema → página de detalles de esta app;
+         * si no se abre ninguno, devuelve false y quien llama muestra el aviso.
          */
         fun openSystemSettings(context: Context): Boolean {
             try { GateService.openingSystemPage(parentAuthorized = true) } catch (_: Exception) { }
@@ -255,7 +263,7 @@ open class DeviceBridge(protected val activity: Activity, private val connection
             Diag.warn("UI", "no system settings activity on this device")
             return false
         }
-        /** 把记下的受控应用拉回前台；失败只记日志，不影响管控 */
+        /** Traer al frente la app controlada recordada; si falla solo se registra en el log, sin afectar al control */
         fun launchPackage(context: android.content.Context, pkg: String): Boolean = try {
             val intent = context.packageManager.getLaunchIntentForPackage(pkg)
             if (intent == null) false else {
