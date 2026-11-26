@@ -67,10 +67,10 @@ object DeviceClock {
         // 今明两天说「今天 / 明天」，孩子不用换算日期（Issue #147）
         val now = calendar(store)
         val target = Calendar.getInstance(zone).apply { timeInMillis = millis }
-        if (sameDay(now, target)) return "今天 $time"
+        if (sameDay(now, target)) return "Hoy $time"
         now.add(Calendar.DATE, 1)
-        if (sameDay(now, target)) return "明天 $time"
-        return java.text.SimpleDateFormat("M 月 d 日 HH:mm", java.util.Locale.CHINA).apply { timeZone = zone }
+        if (sameDay(now, target)) return "Mañana $time"
+        return java.text.SimpleDateFormat("d 'de' MMMM HH:mm", java.util.Locale.CHINA).apply { timeZone = zone }
             .format(java.util.Date(millis))
     }
 
