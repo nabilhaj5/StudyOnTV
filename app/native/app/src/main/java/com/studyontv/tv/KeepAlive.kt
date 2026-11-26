@@ -53,35 +53,35 @@ object KeepAlive {
     fun brandTip(tv: Boolean): String? {
         val name = "${Build.MANUFACTURER} ${Build.BRAND}".lowercase()
         if (tv) return when {
-            name.contains("tcl") -> "TCL 电视：设置 → 应用 → 题了个题 → 自启动，开启「允许自启动」"
-            name.contains("hisense") || name.contains("vidaa") -> "海信电视：设置 → 应用管理 → 题了个题 → 权限 → 允许自启动"
-            name.contains("skyworth") || name.contains("coocaa") -> "创维 / 酷开：设置 → 应用 → 题了个题 → 自启动权限，设为允许"
+            name.contains("tcl") -> "TV TCL: Ajustes → Aplicaciones → 题了个题 → Inicio automático, activa «Permitir inicio automático»"
+            name.contains("hisense") || name.contains("vidaa") -> "TV Hisense: Ajustes → Gestión de apps → 题了个题 → Permisos → Permitir inicio automático"
+            name.contains("skyworth") || name.contains("coocaa") -> "Skyworth / Coocaa: Ajustes → Aplicaciones → 题了个题 → Permiso de inicio automático, establécelo en Permitir"
             // #141：HyperOS 电视有的版本把「应用管理」整个去掉了，家长找不到入口
-            name.contains("xiaomi") || name.contains("redmi") -> "小米 / Redmi 电视：设置 → 应用 → 应用管理 → 题了个题，允许自启动，省电策略设为「无限制」。新版系统没有「应用管理」入口时不用强求：本页「管控服务」「开机自启」正常即可，需要跳转时点下面的「打开系统设置」"
-            name.contains("changhong") -> "长虹电视：设置 → 应用管理 → 题了个题 → 允许后台运行"
-            name.contains("huawei") || name.contains("honor") -> "华为 / 荣耀智慧屏：设置 → 应用 → 应用启动管理 → 题了个题 → 手动管理，全部允许"
-            name.contains("sony") -> "索尼电视：设置 → 应用 → 题了个题 → 电池 → 不受限制"
-            name.contains("samsung") -> "三星电视：设置 → 应用 → 题了个题 → 电池 → 不受限制"
-            name.contains("lg") -> "LG 电视：设置 → 常规 → 应用 → 题了个题 → 电池 → 不限制"
-            name.contains("philips") -> "飞利浦电视：设置 → 应用 → 题了个题 → 自启动 / 后台运行，设为允许"
-            name.contains("sharp") -> "夏普电视：设置 → 应用管理 → 题了个题 → 自启动，设为允许"
-            name.contains("konka") -> "康佳电视：设置 → 应用 → 题了个题 → 自启动，设为允许"
-            name.contains("letv") -> "乐视电视：设置 → 应用管理 → 题了个题 → 自启动，设为允许"
+            name.contains("xiaomi") || name.contains("redmi") -> "TV Xiaomi / Redmi: Ajustes → Aplicaciones → Gestión de apps → 题了个题, permite el inicio automático y pon la política de ahorro de energía en «Sin restricciones». Si tu versión del sistema no tiene «Gestión de apps», no pasa nada: basta con que «Servicio de control» e «Inicio automático» funcionen en esta página; si necesitas ir a los ajustes, pulsa «Abrir ajustes del sistema» abajo"
+            name.contains("changhong") -> "TV Changhong: Ajustes → Gestión de apps → 题了个题 → Permitir ejecución en segundo plano"
+            name.contains("huawei") || name.contains("honor") -> "Huawei / Honor Vision: Ajustes → Aplicaciones → Gestión de inicio de apps → 题了个题 → Gestión manual, permite todo"
+            name.contains("sony") -> "TV Sony: Ajustes → Aplicaciones → 题了个题 → Batería → Sin restricciones"
+            name.contains("samsung") -> "TV Samsung: Ajustes → Aplicaciones → 题了个题 → Batería → Sin restricciones"
+            name.contains("lg") -> "TV LG: Ajustes → General → Aplicaciones → 题了个题 → Batería → Sin restricciones"
+            name.contains("philips") -> "TV Philips: Ajustes → Aplicaciones → 题了个题 → Inicio automático / ejecución en segundo plano, establécelo en Permitir"
+            name.contains("sharp") -> "TV Sharp: Ajustes → Gestión de apps → 题了个题 → Inicio automático, establécelo en Permitir"
+            name.contains("konka") -> "TV Konka: Ajustes → Aplicaciones → 题了个题 → Inicio automático, establécelo en Permitir"
+            name.contains("letv") -> "TV LeTV: Ajustes → Gestión de apps → 题了个题 → Inicio automático, establécelo en Permitir"
             else -> null
         }
         return when {
             name.contains("xiaomi") || name.contains("redmi") || name.contains("poco") ->
-                "小米 / Redmi / POCO 手机：设置 → 应用设置 → 应用管理 → 题了个题 → 自启动；省电策略 → 无限制"
+                "Móvil Xiaomi / Redmi / POCO: Ajustes → Ajustes de apps → Gestión de apps → 题了个题 → Inicio automático; política de ahorro de energía → Sin restricciones"
             name.contains("huawei") || name.contains("honor") ->
-                "华为 / 荣耀手机：① 设置 → 应用 → 应用启动管理 → 题了个题 → 手动管理，全部允许；② 设置 → 电池 → 更多电池设置 → 休眠时始终保持网络连接（避免灭屏后连不上）；③ 最近任务卡片下拉加锁"
+                "Móvil Huawei / Honor: ① Ajustes → Aplicaciones → Gestión de inicio de apps → 题了个题 → Gestión manual, permite todo; ② Ajustes → Batería → Más ajustes de batería → Mantener la conexión de red durante la suspensión (para no perder la conexión con la pantalla apagada); ③ desliza la tarjeta de tareas recientes hacia abajo para bloquearla"
             name.contains("oppo") || name.contains("realme") || name.contains("oneplus") ->
-                "OPPO / realme / 一加：设置 → 应用 → 自启动管理 → 题了个题；电池 → 允许后台活动"
+                "OPPO / realme / OnePlus: Ajustes → Aplicaciones → Gestión de inicio automático → 题了个题; Batería → Permitir actividad en segundo plano"
             name.contains("vivo") || name.contains("iqoo") ->
-                "vivo / iQOO：设置 → 应用与权限 → 权限管理 → 自启动 → 题了个题"
+                "vivo / iQOO: Ajustes → Aplicaciones y permisos → Gestión de permisos → Inicio automático → 题了个题"
             name.contains("samsung") ->
-                "三星手机：设置 → 电池 → 后台使用限制 → 从不休眠的应用，加入题了个题"
+                "Móvil Samsung: Ajustes → Batería → Límites de uso en segundo plano → Aplicaciones que nunca se suspenden, añade 题了个题"
             name.contains("meizu") ->
-                "魅族手机：设置 → 应用管理 → 权限 → 后台管理 → 允许后台运行"
+                "Móvil Meizu: Ajustes → Gestión de apps → Permisos → Gestión en segundo plano → Permitir ejecución en segundo plano"
             else -> null
         }
     }
