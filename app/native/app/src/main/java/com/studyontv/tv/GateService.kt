@@ -370,12 +370,12 @@ class GateService : Service() {
             val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "sotv_gate_alert"
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(
-                NotificationChannel(channelId, "学习提醒", NotificationManager.IMPORTANCE_HIGH))
+                NotificationChannel(channelId, "Recordatorios de estudio", NotificationManager.IMPORTANCE_HIGH))
             val pi = PendingIntent.getActivity(this, 6, Intent(this, OnboardingActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
-            manager.notify(1006, builder.setContentTitle("使用时间管理还没生效")
-                .setContentText("缺少悬浮窗权限，计时和答题拦截都不会生效，请点此开启")
+            manager.notify(1006, builder.setContentTitle("El control del tiempo de uso aún no está activo")
+                .setContentText("Falta el permiso de superposición; el cronómetro y el bloqueo de preguntas no funcionarán. Pulsa aquí para activarlo")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentIntent(pi)
                 .setAutoCancel(true).setOnlyAlertOnce(true).build())
         } catch (e: Exception) { Diag.error("Gate", "cannot notify missing capability", e) }
@@ -521,12 +521,12 @@ class GateService : Service() {
             val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "sotv_gate_alert"
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(
-                NotificationChannel(channelId, "学习提醒", NotificationManager.IMPORTANCE_HIGH))
+                NotificationChannel(channelId, "Recordatorios de estudio", NotificationManager.IMPORTANCE_HIGH))
             val pi = PendingIntent.getActivity(this, 2, Intent(this, OnboardingActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
-            manager.notify(1003, builder.setContentTitle("悬浮窗权限缺失，答题拦截可能已停止")
-                .setContentText("孩子可能已绕过时间限制，请点此重新授权悬浮窗")
+            manager.notify(1003, builder.setContentTitle("Falta el permiso de superposición; el bloqueo de preguntas puede haberse detenido")
+                .setContentText("Puede que el niño haya evitado el límite de tiempo. Pulsa aquí para volver a autorizar la superposición")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentIntent(pi)
                 .setAutoCancel(true).setOnlyAlertOnce(true).build())
         } catch (e: Exception) { Diag.error("Gate", "cannot notify overlay revoked", e) }
@@ -547,13 +547,13 @@ class GateService : Service() {
             val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "sotv_gate_alert"
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(
-                NotificationChannel(channelId, "学习提醒", NotificationManager.IMPORTANCE_HIGH))
+                NotificationChannel(channelId, "Recordatorios de estudio", NotificationManager.IMPORTANCE_HIGH))
             val pi = PendingIntent.getActivity(this, 5, Intent(this, OnboardingActivity::class.java),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
             manager.notify(1005, builder
-                .setContentTitle("无障碍权限缺失，答题拦截可能已停止")
-                .setContentText("孩子可能已绕过时间限制，请点此重新开启无障碍服务")
+                .setContentTitle("Falta el permiso de accesibilidad; el bloqueo de preguntas puede haberse detenido")
+                .setContentText("Puede que el niño haya evitado el límite de tiempo. Pulsa aquí para volver a activar el servicio de accesibilidad")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
                 .setContentIntent(pi).setAutoCancel(true).setOnlyAlertOnce(false).build())
             val lostCount = Prefs.accessibilityLostCount(this) + 1
@@ -569,15 +569,15 @@ class GateService : Service() {
             val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channelId = "sotv_gate_alert"
             if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(
-                NotificationChannel(channelId, "学习提醒", NotificationManager.IMPORTANCE_HIGH))
+                NotificationChannel(channelId, "Recordatorios de estudio", NotificationManager.IMPORTANCE_HIGH))
             val intent = Intent(this, GateActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP).putExtra("reason", reason)
             val pi = PendingIntent.getActivity(this, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
             // 失败原因的人话版进通知正文：家长能看到“为什么没弹”而不用去导诊断日志
             val why = GatePresentation.failureSummary(OverlayAccess.canDraw(this), WatchAccessibilityService.connected, Build.VERSION.SDK_INT)
-            manager.notify(1002, builder.setContentTitle("到学习时间了")
-                .setContentText("没自动弹出学习页（$why），点这里开始答题")
+            manager.notify(1002, builder.setContentTitle("Es hora de estudiar")
+                .setContentText("No se abrió automáticamente la página de estudio ($why). Pulsa aquí para empezar a responder")
                 .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentIntent(pi)
                 .setAutoCancel(true).setOnlyAlertOnce(gateFailures < 3).build())
             Diag.warn("Gate", "fallback notification posted reason=$reason why=$why failures=$gateFailures")
@@ -646,10 +646,10 @@ class GateService : Service() {
     private fun enterForeground() {
         val channelId = "sotv_gate"
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel(channelId, "使用时间管理", NotificationManager.IMPORTANCE_LOW))
+        if (Build.VERSION.SDK_INT >= 26) manager.createNotificationChannel(NotificationChannel(channelId, "Control del tiempo de uso", NotificationManager.IMPORTANCE_LOW))
         val pi = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, channelId) else Notification.Builder(this)
-        val notification = builder.setContentTitle("题了个题 · 使用时间管理中").setContentText("点击打开学习任务")
+        val notification = builder.setContentTitle("题了个题 · Control del tiempo de uso activo").setContentText("Pulsa para abrir la tarea de estudio")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm).setContentIntent(pi).setOngoing(true).build()
         try {
             if (Build.VERSION.SDK_INT >= 34) startForeground(1001, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
@@ -952,10 +952,10 @@ object GatePresentation {
 
     /** 弹窗失败原因（人话，进家长能看到的兜底通知） */
     fun failureSummary(canDraw: Boolean, accessibility: Boolean, api: Int): String = when {
-        !canDraw && !accessibility -> "缺少悬浮窗与无障碍权限"
-        api < 26 -> "系统版本过低，无法悬浮显示"
-        canDraw -> "悬浮窗被系统拒绝"
-        else -> "无障碍覆盖层不可用"
+        !canDraw && !accessibility -> "Faltan los permisos de superposición y accesibilidad"
+        api < 26 -> "La versión del sistema es demasiado antigua para mostrar ventanas flotantes"
+        canDraw -> "El sistema ha rechazado la ventana flotante"
+        else -> "La capa de accesibilidad no está disponible"
     }
 }
 
