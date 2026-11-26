@@ -50,7 +50,7 @@ object AnswerInput {
             this.screen = null
             target.clear()
             web.visibility = View.VISIBLE
-            android.widget.Toast.makeText(context, "暂时无法打开输入页面，请稍后重试", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, "No se puede abrir la página de entrada en este momento, inténtalo más tarde", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -83,13 +83,13 @@ object AnswerInput {
             val payload = result.toString()
             var attempt = 0
             fun send() {
-                                attempt++
+                attempt++
                 try {
                     view.evaluateJavascript("window.SOTV_INPUT&&SOTV_INPUT($payload,'$token')", null)
                 } catch (_: Throwable) { return }
                 if (attempt >= 8) return
                 view.postDelayed({
-                                        try {
+                    try {
                         view.evaluateJavascript("window.__sotvAck==='$token'") { ack ->
                             if (ack == null || !ack.contains("true")) send()
                         }
