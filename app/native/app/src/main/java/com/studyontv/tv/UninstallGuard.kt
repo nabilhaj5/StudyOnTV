@@ -7,8 +7,10 @@ import android.content.Context
 import android.content.Intent
 
 /**
- * 防卸载（Issue #4）：激活为“设备管理应用”后，系统不允许直接卸载，孩子在“我的应用”里删除会失败。
- * 家长需要先在系统设置的“设备管理应用”里关闭，才能卸载。不申请任何管理策略。
+ * Protección contra desinstalación (Issue #4): una vez activada como «app de administración del dispositivo»,
+ * el sistema no permite desinstalarla directamente, y el niño no podrá borrarla desde «Mis aplicaciones».
+ * El padre debe desactivarla primero en «Apps de administración del dispositivo» de los ajustes del sistema
+ * para poder desinstalarla. No se solicita ninguna política de administración.
  */
 class UninstallGuard : DeviceAdminReceiver() {
     override fun onEnabled(context: Context, intent: Intent) {
@@ -18,7 +20,7 @@ class UninstallGuard : DeviceAdminReceiver() {
 
     override fun onDisableRequested(context: Context, intent: Intent): CharSequence {
         SystemSettingsGuard.onPotentialTamper(context)
-        return "关闭后“题了个题”可以被卸载，使用时间管理也会失效。请确认是家长在操作。"
+        return "Si la desactivas, «题了个题» podrá desinstalarse y el control del tiempo de uso dejará de funcionar. Confirma que es el padre quien está haciendo esto."
     }
 
     companion object {
@@ -37,7 +39,7 @@ class UninstallGuard : DeviceAdminReceiver() {
             val manager = context.getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
             if (owner(context)) manager.setUninstallBlocked(component(context), context.packageName, enabled)
             else {
-                require(!enabled) { "请在被控设备上授权设备管理员" }
+                require(!enabled) { "Autoriza el administrador del dispositivo en el dispositivo controlado" }
                 manager.removeActiveAdmin(component(context))
             }
             context.getSharedPreferences("sotv", Context.MODE_PRIVATE).edit().putBoolean("uninstall_guard_enabled", enabled).apply()
@@ -49,6 +51,6 @@ class UninstallGuard : DeviceAdminReceiver() {
         } catch (_: Exception) { false }
         fun requestIntent(context: Context): Intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
             .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, component(context))
-            .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "开启后，孩子无法直接卸载“题了个题”。家长需要先在这里关闭，才能卸载。")
+            .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "Una vez activado, el niño no podrá desinstalar «题了个题» directamente. El padre debe desactivarlo aquí primero para poder desinstalarla.")
     }
 }
