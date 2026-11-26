@@ -19,10 +19,10 @@ object WatchWhitelist {
         for (item in raw) {
             val pkg = item.trim()
             if (pkg.isEmpty()) continue
-            require(pkg.length <= 200 && PACKAGE.matches(pkg)) { "应用包名格式不正确：${pkg.take(60)}" }
+            require(pkg.length <= 200 && PACKAGE.matches(pkg)) { "El nombre del paquete de la app no tiene el formato correcto: ${pkg.take(60)}" }
             out.add(pkg)
         }
-        require(out.size <= MAX) { "白名单最多 $MAX 个应用" }
+        require(out.size <= MAX) { "La lista blanca admite como máximo $MAX aplicaciones" }
         return out.toList()
     }
 
