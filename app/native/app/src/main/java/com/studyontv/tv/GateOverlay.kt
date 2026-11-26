@@ -221,7 +221,7 @@ class GateOverlay(
             setPadding((64 * dp).toInt(), (24 * dp).toInt(), (64 * dp).toInt(), (24 * dp).toInt())
         }
         panel.addView(TextView(context).apply {
-            text = if (passwordMode) "家长验证" else "填写答案"
+            text = if (passwordMode) "Verificación de padres" else "Escribe la respuesta"
             textSize = 26f
             setTextColor(TvUi.foreground(context))
         })
@@ -254,7 +254,7 @@ class GateOverlay(
             }
         }
         edit = EditText(context).apply {
-            hint = if (passwordMode) "输入家长管理密码" else "用遥控器或输入法填写答案，完成后选“确定”"
+            hint = if (passwordMode) "Escribe la contraseña de administración de padres" else "Escribe la respuesta con el mando o el teclado y pulsa «Aceptar»"
             inputType = if (passwordMode) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
                 else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             imeOptions = EditorInfo.IME_ACTION_DONE or EditorInfo.IME_FLAG_NO_EXTRACT_UI
@@ -289,9 +289,9 @@ class GateOverlay(
                 leftMargin = (8 * dp).toInt(); rightMargin = (8 * dp).toInt()
             })
         }
-        addBtn(if (passwordMode) "验证解锁" else "确定", true) { commit(true) }
-        addBtn("清空") { edit.setText("") }
-        addBtn("取消") { commit(false) }
+        addBtn(if (passwordMode) "Verificar y desbloquear" else "Aceptar", true) { commit(true) }
+        addBtn("Borrar") { edit.setText("") }
+        addBtn("Cancelar") { commit(false) }
         panel.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (20 * dp).toInt() })
         scroll.addView(panel, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         host.addView(scroll, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
@@ -420,7 +420,7 @@ class GateOverlay(
             handler.post {
                 val allowed = try { DeviceRuntime.store.config().optBoolean("allowQuizUnlock", false) } catch (_: Throwable) { false }
                 if (!allowed) return@post
-                val prompt = "输入家长密码，验证后可临时解锁 ${DeviceBridge.QUIZ_UNLOCK_MINUTES} 分钟"
+                val prompt = "Introduce la contraseña de padres; tras verificarla se desbloqueará temporalmente durante ${DeviceBridge.QUIZ_UNLOCK_MINUTES} minutos"
                 if (DeviceBridge.isTv(context) && attached) {
                     showInlineInput("", prompt, passwordMode = true)
                 } else {
@@ -447,7 +447,7 @@ class GateOverlay(
         }
         @JavascriptInterface fun askSettingsPassword() {
             handler.post {
-                val prompt = "输入管理密码，验证后可临时进入系统设置 2 分钟"
+                val prompt = "Introduce la contraseña de administración; tras verificarla podrás entrar temporalmente en los ajustes del sistema durante 2 minutos"
                 if (DeviceBridge.isTv(context) && attached) {
                     showInlineInput("", prompt, passwordMode = true)
                 } else {
