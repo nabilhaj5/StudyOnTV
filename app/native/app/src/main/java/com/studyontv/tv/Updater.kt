@@ -61,7 +61,7 @@ object Updater {
         val log = JSONArray()
         if (LocalOnlyGuard.enabled) {
             log.put(JSONObject().put("source", "LocalOnly").put("ok", false).put("ms", 0)
-                .put("message", "仅本地隐私版（EU Local-Only）已禁用在线更新"))
+                .put("message", "La versión de privacidad solo local (EU Local-Only) ha desactivado la actualización en línea"))
             Prefs.setUpdateInfo(ctx, "")
             Prefs.setUpdateCheckedAt(ctx, System.currentTimeMillis())
             Prefs.setUpdateLog(ctx, JSONObject().put("at", System.currentTimeMillis()).put("items", log).toString())
@@ -73,7 +73,7 @@ object Updater {
         try {
             info = Pgyer.info(ctx, current, currentVersionCode(ctx))
             log.put(JSONObject().put("source", "蒲公英").put("ok", info != null).put("ms", System.currentTimeMillis() - started)
-                .put("message", if (info == null) "当前已是最新版本" else "v" + info.latest))
+                .put("message", if (info == null) "Ya tienes la última versión" else "v" + info.latest))
         } catch (e: Exception) {
             Diag.error("Update", "Pgyer check failed", e)
             log.put(JSONObject().put("source", "蒲公英").put("ok", false).put("ms", System.currentTimeMillis() - started)
@@ -171,15 +171,15 @@ object Updater {
     fun saveSettings(ctx: Context, input: JSONObject): JSONObject {
         if (input.has("api")) {
             val api = input.optString("api").trim()
-            require(api.isEmpty() || api.startsWith("https://")) { "自定义更新地址需要以 https:// 开头" }
+            require(api.isEmpty() || api.startsWith("https://")) { "La dirección de actualización personalizada debe empezar por https://" }
             Prefs.setUpdateApi(ctx, api)
         }
         if (input.has("mirrors")) {
             val raw = input.get("mirrors")
             val list = if (raw is JSONArray) (0 until raw.length()).map { raw.optString(it) } else raw.toString().split('\n', ',')
             val clean = list.map { it.trim() }.filter { it.isNotEmpty() }
-            clean.forEach { require(it.startsWith("https://")) { "镜像地址需要以 https:// 开头：$it" } }
-            require(clean.size <= 10) { "最多填写 10 个镜像" }
+            clean.forEach { require(it.startsWith("https://")) { "La dirección del espejo debe empezar por https://: $it" } }
+            require(clean.size <= 10) { "Máximo 10 espejos" }
             Prefs.setUpdateMirrors(ctx, if (input.optBoolean("resetMirrors")) null else clean.joinToString("\n"))
         }
         Prefs.setUpdateCheckedAt(ctx, 0)
